@@ -41,10 +41,13 @@ def set_type(addr, cppType):
 	if cppType.startswith('struct '):
 		cppType = cppType[7:]
 	
-	t = getDataTypes(cppType)[0]
-	addr = toAddr(addr)
-	removeDataAt(addr)
-	createData(addr, t)
+	try:
+		t = getDataTypes(cppType)[0]
+		addr = toAddr(addr)
+		removeDataAt(addr)
+		createData(addr, t)
+	except:
+		print("Failed to set type: %s" % cppType)
 
 def set_comment(addr, text):
 	setEOLComment(toAddr(addr), text)
@@ -63,13 +66,27 @@ def script_prologue(status):
 	# https://github.com/NationalSecurityAgency/ghidra/issues/1020
 	if currentProgram.getExecutableFormat().endswith('(ELF)'):
 		currentProgram.setImageBase(toAddr(%IMAGE_BASE%), True)
+	
+	# Don't trigger decompiler
+	setAnalysisOption(currentProgram, "Call Convention ID", "false")
 
 def get_script_directory(): return getSourceFile().getParentFile().toString()
 
 def script_epilogue(status): pass
 def add_function_to_group(addr, group): pass
 def add_xref(addr, to): pass
-def create_fake_segment(name, size): pass
-def write_string(addr, string): pass
-def write_address(addr, value): pass
+
+def process_string_literals(status, data):
+	for d in jsonData['stringLiterals']:
+		define_string(d)
+
+		# I don't know how to make inline strings in Ghidra
+		# Just revert back original impl
+		addr = parse_address(d)
+		set_name(addr, d['name'])
+		set_type(addr, r'struct String *')
+		set_comment(addr, d['string'])
+
+		status.update_progress()
+
 class StatusHandler(BaseStatusHandler): pass
