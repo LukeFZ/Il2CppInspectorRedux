@@ -64,8 +64,11 @@ def script_prologue(status):
 
 	# Ghidra sets the image base for ELF to 0x100000 for some reason
 	# https://github.com/NationalSecurityAgency/ghidra/issues/1020
+	# Make sure that the base address is 0
+	# Without this, Ghidra may not analyze the binary correctly and you will just waste your time
+	# If 0 doesn't work for you, replace it with the base address from the output of the CLI or GUI
 	if currentProgram.getExecutableFormat().endswith('(ELF)'):
-		currentProgram.setImageBase(toAddr(%IMAGE_BASE%), True)
+		currentProgram.setImageBase(toAddr(0), True)
 	
 	# Don't trigger decompiler
 	setAnalysisOption(currentProgram, "Call Convention ID", "false")

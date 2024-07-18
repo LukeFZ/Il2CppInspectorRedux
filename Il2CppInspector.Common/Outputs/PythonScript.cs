@@ -61,8 +61,7 @@ namespace Il2CppInspector.Outputs
                 .Replace("%SCRIPTFILENAME%", Path.GetFileName(outputFile))
                 .Replace("%TYPE_HEADER_RELATIVE_PATH%", typeHeaderRelativePath.ToEscapedString())
                 .Replace("%JSON_METADATA_RELATIVE_PATH%", jsonMetadataRelativePath.ToEscapedString())
-                .Replace("%TARGET_UNITY_VERSION%", model.UnityHeaders.ToString())
-                .Replace("%IMAGE_BASE%", target == "Ghidra" && this.model.TargetCompiler == Cpp.CppCompilerType.GCC ? "0x0" : model.Package.BinaryImage.ImageBase.ToAddressString());
+                .Replace("%TARGET_UNITY_VERSION%", model.UnityHeaders.ToString());
 
             File.WriteAllText(outputFile, script);
         }
