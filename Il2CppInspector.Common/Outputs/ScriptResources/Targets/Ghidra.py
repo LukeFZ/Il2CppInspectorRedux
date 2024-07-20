@@ -4,6 +4,9 @@ from ghidra.app.script import GhidraScriptUtil
 from ghidra.app.util.cparser.C import CParserUtils
 from ghidra.program.model.data import ArrayDataType
 from ghidra.program.model.symbol import SourceType
+from ghidra.program.model.symbol import *
+
+xrefs = currentProgram.getReferenceManager()
 
 def set_name(addr, name):
 	createLabel(toAddr(addr), name, True)
@@ -77,7 +80,8 @@ def get_script_directory(): return getSourceFile().getParentFile().toString()
 
 def script_epilogue(status): pass
 def add_function_to_group(addr, group): pass
-def add_xref(addr, to): pass
+def add_xref(addr, to):
+	xrefs.addMemoryReference(currentAddress.getAddress(hex(addr)), currentAddress.getAddress(hex(to)), RefType.DATA, SourceType.USER_DEFINED, 0)
 
 def process_string_literals(status, data):
 	for d in jsonData['stringLiterals']:
