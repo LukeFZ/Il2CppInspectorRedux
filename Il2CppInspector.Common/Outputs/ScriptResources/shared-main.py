@@ -96,25 +96,7 @@ def process_json(jsonData, status):
 	if 'virtualAddress' in jsonData['stringLiterals'][0]:
 		status.update_step('Processing string literals (V19+)', len(jsonData['stringLiterals']))
 
-		total_string_length = 0
-		for d in jsonData['stringLiterals']:
-			total_string_length += len(d["string"]) + 1
-		
-		aligned_length = total_string_length + (4096 - (total_string_length % 4096))
-		segment_base = create_fake_segment(".fake_strings", aligned_length)
-
-		current_string_address = segment_base
-		for d in jsonData['stringLiterals']:
-			define_string(d)
-
-			ref_addr = parse_address(d)
-			write_string(current_string_address, d["string"])
-			write_address(ref_addr, current_string_address)
-			set_type(ref_addr, r'const char* const')
-
-			current_string_address += len(d["string"]) + 1
-			status.update_progress()
-
+		process_string_literals(status, jsonData)
 
 	# String literals for version < 19
 	else:
@@ -195,6 +177,6 @@ try:
 	script_epilogue(status)
 
 	status.update_step('Script execution complete.')
-	print(f"Took: {datetime.datetime.now() - start_time}")
+	print("Took: %s" % (datetime.datetime.now() - start_time))
 except RuntimeError: pass
 finally: status.close()
