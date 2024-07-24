@@ -4,12 +4,19 @@ from ghidra.app.script import GhidraScriptUtil
 from ghidra.app.util.cparser.C import CParserUtils
 from ghidra.program.model.data import ArrayDataType
 from ghidra.program.model.symbol import SourceType
-from ghidra.program.model.symbol import *
+from ghidra.program.model.symbol import RefType
+from ghidra.app.cmd.label import DemanglerCmd
 
 xrefs = currentProgram.getReferenceManager()
 
 def set_name(addr, name):
-	createLabel(toAddr(addr), name, True)
+	if not name.startswith("_ZN"):
+		createLabel(toAddr(addr), name, True)
+		return
+	cmd = DemanglerCmd(currentAddress.getAddress(hex(addr)), name)
+	if not cmd.applyTo(currentProgram, monitor):
+		print("Failed to apply demangled name to %s at %s due %s, falling back to mangled" % (name, hex(addr), cmd.getStatusMsg()))
+		createLabel(toAddr(addr), name, True)
 
 def make_function(start, end = None):
 	addr = toAddr(start)
