@@ -111,7 +111,7 @@ class IDADisassemblerInterface(BaseDisassemblerInterface):
 			print(".pdata section found, skipping function boundaries")
 
 		if FOLDERS_AVAILABLE:
-			self._function_dirtree_dirtree = ida_dirtree.get_std_dirtree(ida_dirtree.DIRTREE_FUNCS)
+			self._function_dirtree = ida_dirtree.get_std_dirtree(ida_dirtree.DIRTREE_FUNCS)
 
 		self._is_32_bit = ida_ida.inf_is_32bit_exactly()
 
@@ -179,7 +179,7 @@ class IDADisassemblerInterface(BaseDisassemblerInterface):
 
 	# optional
 	def add_function_to_group(self, address: int, group: str):
-		if not FOLDERS_AVAILABLE:
+		if not FOLDERS_AVAILABLE or True: # enable at your own risk - this is slow
 				return
 
 		if group not in self._folders:
