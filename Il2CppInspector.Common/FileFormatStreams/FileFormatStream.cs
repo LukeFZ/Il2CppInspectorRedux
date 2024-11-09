@@ -284,7 +284,7 @@ namespace Il2CppInspector
         public virtual uint MapVATR(ulong uiAddr) => (uint) uiAddr;
 
         // Try to map an RVA to an offset in the file image
-        public bool TryMapVATR(ulong uiAddr, out uint fileOffset) {
+        public virtual bool TryMapVATR(ulong uiAddr, out uint fileOffset) {
             try {
                 fileOffset = MapVATR(uiAddr);
                 return true;

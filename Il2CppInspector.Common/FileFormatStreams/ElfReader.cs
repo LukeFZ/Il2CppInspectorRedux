@@ -529,10 +529,27 @@ namespace Il2CppInspector
         // an exception will be thrown. This area of memory is assumed to contain all zeroes.
         public override uint MapVATR(ulong uiAddr) {
             // Additions in the argument to MapVATR may cause an overflow which should be discarded for 32-bit files
+            if (!TryMapVATR(uiAddr, out var offset))
+                throw new InvalidOperationException("Failed to map virtual address");
+
+            return offset;
+        }
+
+        public override bool TryMapVATR(ulong uiAddr, out uint fileOffset)
+        {
+            // Additions in the argument to MapVATR may cause an overflow which should be discarded for 32-bit files
             if (Bits == 32)
                 uiAddr &= 0xffff_ffff;
-            var program_header_table = this.PHT.First(x => uiAddr >= conv.ULong(x.p_vaddr) && uiAddr <= conv.ULong(conv.Add(x.p_vaddr, x.p_filesz)));
-            return (uint) (uiAddr - conv.ULong(conv.Sub(program_header_table.p_vaddr, program_header_table.p_offset)));
+
+            var phtEntry = PHT.FirstOrDefault(x => uiAddr >= conv.ULong(x.p_vaddr) && uiAddr <= conv.ULong(conv.Add(x.p_vaddr, x.p_filesz)));
+            if (phtEntry == null)
+            {
+                fileOffset = 0;
+                return false;
+            }
+
+            fileOffset = (uint)(uiAddr - conv.ULong(conv.Sub(phtEntry.p_vaddr, phtEntry.p_offset)));
+            return true;
         }
 
         public override ulong MapFileOffsetToVA(uint offset) {
