@@ -203,19 +203,21 @@ namespace Il2CppInspector
                 for (var i = 0; i < TypeDefinitions.Length; i++) {
                     var def = TypeDefinitions[i];
                     var pFieldOffsets = Binary.FieldOffsetPointers[i];
-                    if (pFieldOffsets != 0) {
-                        bool available = true;
-
+                    if (pFieldOffsets != 0) 
+                    {
                         // If the target address range is not mapped in the file, assume zeroes
-                        try {
-                            BinaryImage.Position = BinaryImage.MapVATR((ulong) pFieldOffsets);
+                        if (BinaryImage.TryMapVATR((ulong)pFieldOffsets, out var fieldOffsetPosition))
+                        {
+                            BinaryImage.Position = fieldOffsetPosition;
+                            var fieldOffsets = BinaryImage.ReadArray<uint>(def.FieldCount);
+                            for (var fieldIndex = 0; fieldIndex < def.FieldCount; fieldIndex++)
+                                offsets.Add(def.FieldIndex + fieldIndex, fieldOffsets[fieldIndex]);
                         }
-                        catch (InvalidOperationException) {
-                            available = false;
+                        else
+                        {
+                            for (var fieldIndex = 0; fieldIndex < def.FieldCount; fieldIndex++)
+                                offsets.Add(def.FieldIndex + fieldIndex, 0);
                         }
-
-                        for (var f = 0; f < def.FieldCount; f++)
-                            offsets.Add(def.FieldIndex + f, available? BinaryImage.ReadUInt32() : 0);
                     }
                 }
 
