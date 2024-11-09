@@ -71,8 +71,9 @@ namespace Il2CppInspector.Reflection {
                 // TODO: Generate EntryPoint method from entryPointIndex
             }
 
-            // Find corresponding module (we'll need this for method pointers)
-            ModuleDefinition = Model.Package.Modules[ShortName];
+            // Find corresponding module (we'll need this for method pointers on V24.2+)
+            if (Model.Package.Modules != null)
+                ModuleDefinition = Model.Package.Modules[ShortName];
 
             // Generate types in DefinedTypes from typeStart to typeStart+typeCount-1
             for (var t = ImageDefinition.TypeStart; t < ImageDefinition.TypeStart + ImageDefinition.TypeCount; t++) {
