@@ -24,7 +24,7 @@ jobs:
               ${{ runner.os }}-nuget-
 
       - name: Restore NuGet packages
-        run: dotnet restore -r net9.0-windows
+        run: dotnet restore -r win-x64 ./Il2CppInspector.GUI
       
       - name: Build GUI
         run: dotnet publish ./Il2CppInspector.GUI/Il2CppInspector.GUI.csproj -c Release -r net9.0-windows --no-self-contained
@@ -65,10 +65,10 @@ jobs:
           dotnet-version: ${{ matrix.dotnet-version }}
 
       - name: Install dependencies
-        run: dotnet restore -r ${{ matrix.rid }}
+        run: dotnet restore -r ${{ matrix.rid }} ./Il2CppInspector.CLI
 
       - name: Build & Publish
-        run: dotnet publish ./Il2CppInspector.CLI/Il2CppInspector.CLI.csproj -c Release --no-self-contained --no-restore -o ./${{ matrix.rid }} -r ${{ matrix.rid }}
+        run: dotnet publish -c Release --no-self-contained --no-restore -o ./${{ matrix.rid }} -r ${{ matrix.rid }} ./Il2CppInspector.CLI/Il2CppInspector.CLI.csproj
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
