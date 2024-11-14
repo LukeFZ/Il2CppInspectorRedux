@@ -1,21 +1,20 @@
 name: Il2CppInspectorRedux Build
 
-on:
-  push:
-    branches: [ master ]
-
-  workflow_dispatch:
+on: [push, workflow_dispatch]
 
 jobs:
-  build:
+  build-gui:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
-      - uses: microsoft/setup-msbuild@v1.1
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
   
       - uses: actions/cache@v3
         with:
@@ -25,33 +24,54 @@ jobs:
               ${{ runner.os }}-nuget-
 
       - name: Restore NuGet packages
-        run: nuget restore
+        run: dotnet restore -r net9.0-windows
       
       - name: Build GUI
-        run: msbuild /t:Il2CppInspector_GUI:publish /p:Configuration=Release /p:Platform="Any CPU" /p:TargetFramework=net9.0-windows /p:SelfContained=false /verbosity:minimal
-
-      - name: Build CLI
-        run: msbuild /t:Il2CppInspector_CLI:publish /p:Configuration=Release /p:Platform="Any CPU" /p:TargetFramework=net9.0 /p:SelfContained=false /verbosity:minimal
-
-      - name: Add Plugins folder (GUI)
-        shell: pwsh
-        working-directory: Il2CppInspector.GUI/bin/Release/net8.0-windows/win-x64/publish
-        run: ../../../../../../get-plugins.ps1
-
-      - name: Add Plugins folder (CLI)
-        shell: pwsh
-        working-directory: Il2CppInspector.CLI/bin/Release/net8.0/win-x64/publish
-        run: ../../../../../../get-plugins.ps1
+        run: dotnet publish ./Il2CppInspector.GUI/Il2CppInspector.GUI.csproj -c Release -r net9.0-windows --no-self-contained
 
       - name: Upload GUI Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Il2CppInspectorRedux.GUI
           path: Il2CppInspector.GUI/bin/Release/net9.0-windows/win-x64/publish
 
-      - name: Upload CLI Artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: Il2CppInspectorRedux.CLI
-          path: Il2CppInspector.CLI/bin/Release/net9.0/win-x64/publish
+  build-cli:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dotnet-version: [ '9.0.x' ]
+        rid: ['win-x64', 'linux-x64', 'linux-arm64', 'osx-x64', 'osx-arm64']
 
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+  
+      - uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+              ${{ runner.os }}-nuget-
+
+      - name: Setup .NET SDK ${{ matrix.dotnet-version }}
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+
+      - name: Install dependencies
+        run: dotnet restore -r ${{ matrix.rid }}
+
+      - name: Build & Publish
+        run: dotnet publish ./Il2CppInspector.CLI/Il2CppInspector.CLI.csproj -c Release --no-self-contained --no-restore -o ./${{ matrix.rid }} -r ${{ matrix.rid }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+           name: Il2CppInspectorRedux.CLI-${{ matrix.rid }}.zip
+           path: ./${{ matrix.rid }}

@@ -124,7 +124,7 @@ Nice to have:
 * Automatically defeats certain basic obfuscation methods
 * Test chassis for automated integration testing of IL2CPP binaries
 
-Class library targets .NET 8. Built with Visual Studio 2022.
+Class library targets .NET 9. Built with Visual Studio 2022.
 
 **NOTE**: Il2CppInspector is not a decompiler. It can provide you with the structure of an application and function addresses for every method so that you can easily jump straight to methods of interest in your disassembler. It does not attempt to recover the entire source code of the application.
 
@@ -181,9 +181,9 @@ Get all current plugins (optional):
 
 For other operating systems supporting .NET Core, add  `-r xxx` to the final command where `xxx` is a RID from https://docs.microsoft.com/en-us/dotnet/articles/core/rid-catalog
 
-The output binary for command-line usage is placed in `Il2CppInspectorRedux/Il2CppInspector.CLI/bin/Release/net8.0/[win|osx|linux]-x64/publish/Il2CppInspector.exe`.
+The output binary for command-line usage is placed in `Il2CppInspectorRedux/Il2CppInspector.CLI/bin/Release/net9.0/[win|osx|linux]-x64/publish/Il2CppInspector.exe`.
 
-The output binary for Windows GUI is placed in `Il2CppInspectorRedux/Il2CppInspector.GUI/bin/Release/net8.0-windows/win-x64/publish/Il2CppInspector.exe`.
+The output binary for Windows GUI is placed in `Il2CppInspectorRedux/Il2CppInspector.GUI/bin/Release/net9.0-windows/win-x64/publish/Il2CppInspector.exe`.
 
 The `plugins` folder should be placed in the same folder as `Il2CppInspector.exe`.
 
