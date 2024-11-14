@@ -16,18 +16,18 @@ jobs:
         with:
           dotnet-version: '9.0.x'
   
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          key: ${{ runner.os }}-nuget-gui-${{ hashFiles('**/packages.lock.json') }}
           restore-keys: |
-              ${{ runner.os }}-nuget-
+              ${{ runner.os }}-nuget-gui-
 
       - name: Restore NuGet packages
         run: dotnet restore -r win-x64 ./Il2CppInspector.GUI
       
       - name: Build GUI
-        run: dotnet publish ./Il2CppInspector.GUI/Il2CppInspector.GUI.csproj -c Release -r net9.0-windows --no-self-contained
+        run: dotnet publish ./Il2CppInspector.GUI/Il2CppInspector.GUI.csproj -c Release -r win-x64 --no-self-contained
 
       - name: Upload GUI Artifact
         uses: actions/upload-artifact@v4
@@ -55,9 +55,9 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          key: ${{ runner.os }}-nuget-cli-${{ matrix.rid }}-${{ hashFiles('**/packages.lock.json') }}
           restore-keys: |
-              ${{ runner.os }}-nuget-
+              ${{ runner.os }}-nuget-cli-${{ matrix.rid }}-
 
       - name: Setup .NET SDK ${{ matrix.dotnet-version }}
         uses: actions/setup-dotnet@v3
