@@ -5,6 +5,7 @@ from ghidra.program.model.data import ArrayDataType
 from ghidra.program.model.symbol import SourceType
 from ghidra.program.model.symbol import RefType
 from ghidra.app.cmd.label import DemanglerCmd
+from ghidra.app.services import DataTypeManagerService
 
 #try:
 #	from typing import TYPE_CHECKING
@@ -77,8 +78,7 @@ class GhidraDisassemblerInterface(BaseDisassemblerInterface):
 			print("Failed to set type: %s" % type)
 
 	def set_function_type(self, address: int, type: str):
-		make_function(address)
-		typeSig = CParserUtils.parseSignature(None, currentProgram, type)
+		typeSig = CParserUtils.parseSignature(DataTypeManagerService@None, currentProgram, type)
 		ApplyFunctionSignatureCmd(toAddr(address), typeSig, SourceType.USER_DEFINED, False, True).applyTo(currentProgram)
 
 	def set_data_comment(self, address: int, cmt: str):
