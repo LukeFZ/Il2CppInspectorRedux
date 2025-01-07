@@ -286,5 +286,8 @@ class ScriptContext:
 			end_time = datetime.now()
 			print(f"Took: {end_time - start_time}")
 
-		except RuntimeError: pass
-		finally: self._status.shutdown()
+		except RuntimeError: 
+			pass
+		
+		finally: 
+			self._status.shutdown()

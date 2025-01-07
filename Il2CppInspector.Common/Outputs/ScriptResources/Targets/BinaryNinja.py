@@ -8,6 +8,8 @@ from binaryninja import *
 #		import os
 #		import sys
 #		from datetime import datetime
+#		from typing import Literal
+#		bv: BinaryView = None # type: ignore
 #except:
 #	pass
 
@@ -29,6 +31,12 @@ class BinaryNinjaDisassemblerInterface(BaseDisassemblerInterface):
 
 	_address_size: int
 	_endianness: Literal["little", "big"]
+
+	TYPE_PARSER_OPTIONS = [
+		"--target=x86_64-pc-linux",
+		"-x", "c++",
+		"-D_BINARYNINJA_=1"
+	]
 
 	def __init__(self, status: BaseStatusHandler):
 		self._status = status
@@ -54,6 +62,22 @@ class BinaryNinjaDisassemblerInterface(BaseDisassemblerInterface):
 		self._type_cache[type] = parsed
 		return parsed
 
+	def _parse_type_source(self, types: str, filename: str | None = None):
+		parsed_types, errors = TypeParser.default.parse_types_from_source(
+			types,
+			filename if filename else "types.hpp",
+			self._view.platform if self._view.platform is not None else Platform["windows-x86_64"],
+			self._view,
+			self.TYPE_PARSER_OPTIONS
+		)
+
+		if parsed_types is None:
+			log_error("Failed to import types.")
+			log_error(errors)
+			return None
+		
+		return parsed_types
+
 	def get_script_directory(self) -> str:
 		return CURRENT_PATH
 
@@ -71,21 +95,8 @@ class BinaryNinjaDisassemblerInterface(BaseDisassemblerInterface):
 		self._status.update_step("Parsing header")
 
 		with open(os.path.join(self.get_script_directory(), "il2cpp.h"), "r") as f:
-			parsed_types, errors = TypeParser.default.parse_types_from_source(
-				f.read(),
-				"il2cpp.h",
-				self._view.platform if self._view.platform is not None else Platform["windows-x86_64"],
-				self._view,
-				[
-					"--target=x86_64-pc-linux",
-					"-x", "c++",
-					"-D_BINARYNINJA_=1"
-				]
-			)
-
+			parsed_types = self._parse_type_source(f.read(), "il2cpp.hpp")
 			if parsed_types is None:
-				log_error("Failed to import header")
-				log_error(errors)
 				return
 
 		self._status.update_step("Importing header types", len(parsed_types.types))
@@ -206,9 +217,14 @@ class BinaryNinjaDisassemblerInterface(BaseDisassemblerInterface):
 			return
 		
 		typestr = ";\n".join(function_sigs).replace("this", "_this") + ";"
-		res = self._view.parse_types_from_string(typestr)
-		for function_sig, function in zip(function_sigs, res.functions.values()): # type: ignore
-			self._function_type_cache[function_sig] = function
+		parsed_types = self._parse_type_source(typestr, "cached_types.hpp")
+		if parsed_types is None:
+			return
+
+		# bv.parse_types_from_source returns a dict in the functions field.
+		# TypeParser.parse_types_from_source does not.
+		for function_sig, function in zip(function_sigs, parsed_types.functions):
+			self._function_type_cache[function_sig] = function.type
 
 	# only required if supports_fake_string_segment == True
 	def create_fake_segment(self, name: str, size: int) -> int: 
