@@ -106,8 +106,8 @@ class IDADisassemblerInterface(BaseDisassemblerInterface):
 			ida_typeinf.set_c_macros(original_macros)
 
 		# Skip make_function on Windows GameAssembly.dll files due to them predefining all functions through pdata which makes the method very slow
-		skip_make_function = ida_segment.get_segm_by_name(".pdata") is not None
-		if skip_make_function:
+		self._skip_function_creation = ida_segment.get_segm_by_name(".pdata") is not None
+		if self._skip_function_creation:
 			print(".pdata section found, skipping function boundaries")
 
 		if FOLDERS_AVAILABLE:
