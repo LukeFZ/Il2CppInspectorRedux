@@ -202,11 +202,12 @@ class IDADisassemblerInterface(BaseDisassemblerInterface):
 
 		return start
 
-	def write_string(self, address: int, value: str):
+	def write_string(self, address: int, value: str) -> int:
 		encoded_string = value.encode() + b'\x00'
 		string_length = len(encoded_string)
 		ida_bytes.put_bytes(address, encoded_string)
 		ida_bytes.create_strlit(address, string_length, ida_nalt.STRTYPE_C)
+		return string_length
 
 	def write_address(self, address: int, value: int): 
 		if self._is_32_bit:

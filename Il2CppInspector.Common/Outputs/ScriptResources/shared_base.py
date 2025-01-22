@@ -64,7 +64,7 @@ class BaseDisassemblerInterface(abc.ABC):
 	# only required if supports_fake_string_segment == True
 	def create_fake_segment(self, name: str, size: int) -> int: return 0
 
-	def write_string(self, address: int, value: str): pass
+	def write_string(self, address: int, value: str) -> int: pass
 	def write_address(self, address: int, value: int): pass
 
 class ScriptContext:
@@ -191,11 +191,11 @@ class ScriptContext:
 					self.define_string(d)
 
 					ref_addr = self.parse_address(d)
-					self._backend.write_string(current_string_address, d["string"])
+					written_string_length = self._backend.write_string(current_string_address, d["string"])
 					self._backend.set_data_type(ref_addr, r'const char* const')
 					self._backend.write_address(ref_addr, current_string_address)
 
-					current_string_address += len(d["string"]) + 1
+					current_string_address += written_string_length
 					self._status.update_progress()
 			else:
 				for d in metadata['stringLiterals']:
