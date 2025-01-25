@@ -236,8 +236,10 @@ class BinaryNinjaDisassemblerInterface(BaseDisassemblerInterface):
 		self._view.add_user_section(name, last_end_addr, size, SectionSemantics.ReadOnlyDataSectionSemantics)
 		return last_end_addr
 	
-	def write_string(self, address: int, value: str):
-		self._view.write(address, value.encode() + b"\x00")
+	def write_string(self, address: int, value: str) -> int:
+		encoded = value.encode() + b"\x00"
+		self._view.write(address, encoded)
+		return len(encoded)
 
 	def write_address(self, address: int, value: int):
 		self._view.write(address, value.to_bytes(self._address_size, self._endianness))
