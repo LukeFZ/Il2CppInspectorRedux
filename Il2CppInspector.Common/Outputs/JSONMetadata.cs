@@ -217,7 +217,6 @@ namespace Il2CppInspector.Outputs
                 foreach (var symbol in symbols) {
                     writeObject(() => {
                         writeName(symbol.VirtualAddress, symbol.Name);
-                        writer.WriteString("demangledName", symbol.DemangledName);
                         writer.WriteString("type", symbol.Type.ToString());
                     });
                 }

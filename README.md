@@ -785,7 +785,6 @@ Thanks to the following major contributors!
 This project uses:
 
 - [MultiKeyDictionary](https://www.codeproject.com/Articles/32894/C-Multi-key-Generic-Dictionary) by Aron Weiler
-- [CxxDemangler](https://github.com/southpolenator/CxxDemangler) by Vuk Jovanovic
 - [CommandLineParser](https://github.com/commandlineparser/commandline) 
 - [Ookii.Dialogs.Wpf](https://github.com/augustoproiete/ookii-dialogs-wpf)
 - [XamlAnimatedGif](https://github.com/XamlAnimatedGif/WpfAnimatedGif) by Thomas Levesque

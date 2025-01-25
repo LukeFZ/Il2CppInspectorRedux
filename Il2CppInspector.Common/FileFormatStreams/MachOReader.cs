@@ -282,7 +282,7 @@ namespace Il2CppInspector
                     : SymbolType.Unknown;
 
                 if (type == SymbolType.Unknown) {
-                    Console.WriteLine($"Unknown symbol type: {((int) ntype):x2}   {value:x16}   " + CxxDemangler.CxxDemangler.Demangle(name));
+                    Console.WriteLine($"Unknown symbol type: {((int) ntype):x2}   {value:x16}   {name}");
                 }
 
                 // Ignore duplicates

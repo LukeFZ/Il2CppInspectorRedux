@@ -20,7 +20,5 @@ namespace Il2CppInspector
         public ulong VirtualAddress { get; set; }
         public string Name { get; set; }
         public SymbolType Type { get; set; }
-
-        public string DemangledName => CxxDemangler.CxxDemangler.Demangle(Name);
     }
 }

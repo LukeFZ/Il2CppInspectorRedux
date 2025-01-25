@@ -41,10 +41,7 @@
 
   <ItemGroup>
     <PackageReference Include="dnlib" Version="4.4.0" />
-    <PackageReference Include="McMaster.NETCore.Plugins" Version="1.4.0" />
-    <PackageReference Include="CxxDemangler" Version="0.2.4.11">
-      <NoWarn>NU1605</NoWarn>
-    </PackageReference>
+    <PackageReference Include="McMaster.NETCore.Plugins" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>

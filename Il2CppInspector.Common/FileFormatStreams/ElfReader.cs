@@ -463,7 +463,7 @@ namespace Il2CppInspector
                     var symbolItem = new Symbol {Name = name, Type = type, VirtualAddress = conv.ULong(symbol.st_value) };
                     symbolTable.TryAdd(name, symbolItem);
                     if (symbol.st_shndx != (ushort) Elf.SHN_UNDEF)
-                        exportTable.TryAdd(name, new Export {Name = symbolItem.DemangledName, VirtualAddress = conv.ULong(symbol.st_value)});
+                        exportTable.TryAdd(name, new Export {Name = symbolItem.Name, VirtualAddress = conv.ULong(symbol.st_value)});
                 }
             }
 
