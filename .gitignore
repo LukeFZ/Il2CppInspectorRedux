@@ -268,3 +268,6 @@ paket-files/
 /Il2CppInspector.sln.DotSettings
 /Il2CppTests/samples
 /Il2CppTests/TestCpp
+
+# for dotnet-tools.json
+.config

@@ -4,7 +4,8 @@ namespace Il2CppInspector.Redux.GUI;
 
 public class UiProcessService(IHostApplicationLifetime lifetime) : BackgroundService
 {
-    private const string UiExecutableName = "Il2CppInspector.Redux.GUI.UI.exe";
+    // NOTE: this is not really a good solution for getting people to launch the correct program.
+    private const string UiExecutableName = "./resources/il2cppinspectorredux.exe";
 
     private Process? _uiProcess;
 
