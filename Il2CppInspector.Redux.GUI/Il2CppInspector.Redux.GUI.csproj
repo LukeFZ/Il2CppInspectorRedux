@@ -8,6 +8,7 @@
     <PublishAot>false</PublishAot>
 	  <!-- todo: enable this once the app is aot compliant! -->
 	  <OutputType Condition="'$(Configuration)' == 'Release'">WinExe</OutputType>
+	  <PublishSingleFile>true</PublishSingleFile>
   </PropertyGroup>
 
   <ItemGroup>
