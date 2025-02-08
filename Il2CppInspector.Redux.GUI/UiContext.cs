@@ -200,8 +200,16 @@ public class UiContext
 
             foreach (var queuedExport in _queuedExports)
             {
-                var outputFormat = OutputFormatRegistry.GetOutputFormat(queuedExport.FormatId);
-                await outputFormat.Export(model, client, queuedExport.OutputDirectory, queuedExport.Settings);
+                try
+                {
+                    var outputFormat = OutputFormatRegistry.GetOutputFormat(queuedExport.FormatId);
+                    await outputFormat.Export(model, client, queuedExport.OutputDirectory, queuedExport.Settings);
+                }
+                catch (Exception ex)
+                {
+                    await client.ShowErrorToast($"Export for format {queuedExport.FormatId} failed: {ex}",
+                        cancellationToken);
+                }
             }
 
             _queuedExports.Clear();
