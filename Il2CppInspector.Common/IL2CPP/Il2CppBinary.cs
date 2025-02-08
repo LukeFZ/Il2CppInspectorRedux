@@ -337,7 +337,15 @@ namespace Il2CppInspector
                     }
 
                     // Read method invoker pointer indices - one per method
-                    MethodInvokerIndices.Add(module, Image.ReadMappedPrimitiveArray<int>(module.InvokerIndices, (int) module.MethodPointerCount));
+                    try
+                    {
+                        MethodInvokerIndices.Add(module,
+                            Image.ReadMappedPrimitiveArray<int>(module.InvokerIndices, (int)module.MethodPointerCount));
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        MethodInvokerIndices.Add(module, [..new int[(int)module.MethodPointerCount]]);
+                    }
                 }
             }
 
@@ -398,12 +406,21 @@ namespace Il2CppInspector
                     var type = TypeReferences[i];
                     if (type.Type.IsTypeDefinitionEnum())
                     {
-                        type.Data.Value = (type.Data.Type.PointerValue - baseDefinitionPtr) / definitionSize;
+                        if (type.Data.Type.PointerValue >= baseDefinitionPtr)
+                            type.Data.Value = (type.Data.Type.PointerValue - baseDefinitionPtr) / definitionSize;
+
+                        Debug.Assert(Metadata!.Types.Length > type.Data.KlassIndex);
                     }
                     else if (type.Type.IsGenericParameterEnum())
                     {
-                        type.Data.Value = (type.Data.Type.PointerValue - baseGenericPtr) / genericParameterSize;
+                        if (type.Data.Type.PointerValue >= baseGenericPtr)
+                            type.Data.Value = (type.Data.Type.PointerValue - baseGenericPtr) / genericParameterSize;
+
+                        Debug.Assert(Metadata!.GenericParameters.Length > type.Data.KlassIndex);
                     }
+
+                    Debug.Assert((long)type.Data.Value >= 0);
+
                     builder.Add(type);
                 }
                 TypeReferences = builder.MoveToImmutable();

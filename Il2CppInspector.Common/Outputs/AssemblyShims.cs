@@ -430,7 +430,7 @@ namespace Il2CppInspector.Outputs
             if (method.VirtualAddress.HasValue) {
                 var args = new List<(string,object)> {
                         ("RVA", (method.VirtualAddress.Value.Start - model.Package.BinaryImage.ImageBase).ToAddressString()),
-                        ("Offset", string.Format("0x{0:X}", model.Package.BinaryImage.MapVATR(method.VirtualAddress.Value.Start))),
+                        ("Offset", $"0x{model.Package.BinaryImage.MapVATR(method.VirtualAddress.Value.Start):X}"),
                         ("VA", method.VirtualAddress.Value.Start.ToAddressString())
                     };
                 if (method.Definition.Slot != ushort.MaxValue)
@@ -470,7 +470,7 @@ namespace Il2CppInspector.Outputs
             return def.AddAttribute(module, attributeAttribute,
                 ("Name", ca.AttributeType.Name),
                 ("RVA", (ca.VirtualAddress.Start - model.Package.BinaryImage.ImageBase).ToAddressString()),
-                ("Offset", string.Format("0x{0:X}", model.Package.BinaryImage.MapVATR(ca.VirtualAddress.Start)))
+                ("Offset", $"0x{model.Package.BinaryImage.MapVATR(ca.VirtualAddress.Start):X}")
             );
         }
 

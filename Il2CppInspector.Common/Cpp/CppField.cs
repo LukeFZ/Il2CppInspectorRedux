@@ -4,8 +4,6 @@
     All rights reserved.
 */
 
-using System;
-
 namespace Il2CppInspector.Cpp
 {
     // A field in a C++ type

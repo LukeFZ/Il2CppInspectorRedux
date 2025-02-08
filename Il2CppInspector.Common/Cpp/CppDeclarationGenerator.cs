@@ -228,6 +228,14 @@ namespace Il2CppInspector.Cpp
                         ns.ReserveName("_");
                         fieldType = types.Struct(name + "__Fields");
                         var baseFieldType = types[TypeNamer.GetName(ti.BaseType) + "__Fields"];
+
+                        if (baseFieldType == null)
+                        {
+                            // if we end up here, there is a loop in the type generation.
+                            // this is not currently supported, so we throw an exception.
+                            throw new InvalidOperationException($"Failed to generate type for {ti}");
+                        }
+
                         fieldType.AddField("_", baseFieldType);
                         GenerateFieldList(fieldType, ns, ti);
                     }
@@ -437,16 +445,30 @@ namespace Il2CppInspector.Cpp
         /// <returns>A string containing C type declarations</returns>
         public List<(TypeInfo ilType, CppComplexType valueType, CppComplexType referenceType, CppComplexType fieldsType,
             CppComplexType vtableType, CppComplexType staticsType)> GenerateRemainingTypeDeclarations() {
-            var decl = GenerateVisitedFieldStructs().Select(s =>
-                (s.ilType, s.valueType, s.referenceType, s.fieldsType, (CppComplexType) null, (CppComplexType) null)).ToList();
+            try
+            {
+                var decl = GenerateVisitedFieldStructs().Select(s =>
+                        (s.ilType, s.valueType, s.referenceType, s.fieldsType, (CppComplexType)null,
+                            (CppComplexType)null))
+                    .ToList();
 
-            foreach (var ti in TodoTypeStructs) {
-                var (cls, statics, vtable) = GenerateTypeStruct(ti);
-                decl.Add((ti, null, cls, null, vtable, statics));
+                foreach (var ti in TodoTypeStructs)
+                {
+                    var (cls, statics, vtable) = GenerateTypeStruct(ti);
+                    decl.Add((ti, null, cls, null, vtable, statics));
+                }
+
+                return decl;
             }
-            TodoTypeStructs.Clear();
-
-            return decl;
+            catch (Exception)
+            {
+                return null;
+            }
+            finally
+            {
+                TodoTypeStructs.Clear();
+                TodoFieldStructs.Clear();
+            }
         }
         #endregion
 

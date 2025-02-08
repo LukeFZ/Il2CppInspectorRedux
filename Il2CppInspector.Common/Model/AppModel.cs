@@ -236,7 +236,17 @@ namespace Il2CppInspector.Model
                             break;
                         case MetadataUsageType.MethodDef or MetadataUsageType.MethodRef:
                             var method = TypeModel.GetMetadataUsageMethod(usage);
+
                             declarationGenerator.IncludeMethod(method);
+                            var definitions = declarationGenerator.GenerateRemainingTypeDeclarations();
+                            if (definitions == null)
+                            {
+                                // if we end up here, type generation has failed
+                                // todo: this try/catch is a massive hack to sidestep the original issue of generation failing,
+                                // todo: this needs to be improved.
+                                break;
+                            }
+
                             AddTypes(declarationGenerator.GenerateRemainingTypeDeclarations());
 
                             // Any method here SHOULD already be in the Methods list
@@ -247,6 +257,7 @@ namespace Il2CppInspector.Model
                                 Methods.Add(method, fnPtr, new AppMethod(method, fnPtr) { Group = Group });
                             }
                             Methods[method].MethodInfoPtrAddress = address;
+
                             break;
 
                         // FieldInfo is used for array initializers.
