@@ -44,13 +44,15 @@ public class CSharpStubOutput : IOutputFormatProvider
 
         await client.ShowLogMessage("Writing C# type definitions");
 
+        var outputPathFile = Path.Join(outputPath, "il2cpp.cs");
+
         switch (settings.Layout, settings.SortingMode)
         {
             case (CSharpLayout.SingleFile, TypeSortingMode.TypeDefinitionIndex):
-                writer.WriteSingleFile(outputPath, info => info.Index);
+                writer.WriteSingleFile(outputPathFile, info => info.Index);
                 break;
             case (CSharpLayout.SingleFile, TypeSortingMode.Alphabetical):
-                writer.WriteSingleFile(outputPath, info => info.Name);
+                writer.WriteSingleFile(outputPathFile, info => info.Name);
                 break;
             
             case (CSharpLayout.Namespace, TypeSortingMode.TypeDefinitionIndex):

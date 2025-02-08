@@ -107,6 +107,7 @@ public class UiContext
                 // Clear out failed metadata and binary so subsequent loads do not use any stale data.
                 _metadata = null;
                 _binary = null;
+
                 return false;
             }
         }
