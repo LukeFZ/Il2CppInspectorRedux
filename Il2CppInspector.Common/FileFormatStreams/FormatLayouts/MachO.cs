@@ -6,6 +6,7 @@
 
 using System;
 using NoisyCowStudios.Bin2Object;
+using VersionedSerialization.Attributes;
 
 namespace Il2CppInspector
 {
@@ -31,6 +32,7 @@ namespace Il2CppInspector
         LC_DYLD_INFO_ONLY = 0x80000022,
         LC_FUNCTION_STARTS = 0x26,
         LC_ENCRYPTION_INFO_64 = 0x2C,
+        LC_DYLD_CHAINED_FIXUPS = 0x80000034,
 
         CPU_TYPE_X86 = 7,
         CPU_TYPE_X86_64 = 0x01000000 + CPU_TYPE_X86,
@@ -171,5 +173,48 @@ namespace Il2CppInspector
         public uint r_length => (r_data >> 25) & 3;
         public bool r_extern => ((r_data >> 27) & 1) == 1;
         public uint r_type => r_data >> 28;
+    }
+
+    [VersionedStruct]
+    public partial struct MachODyldChainedFixupsHeader
+    {
+        public uint FixupsVersion;
+        public uint StartsOffset;
+        public uint ImportsOffset;
+        public uint SymbolsOffset;
+        public uint ImportsCount;
+        public uint ImportsFormat;
+        public uint SymbolsFormat;
+    }
+
+    [VersionedStruct]
+    public partial struct MachODyldChainedStartsInSegment
+    {
+        public const ushort DYLD_CHAINED_PTR_START_NONE = 0xffff;
+
+        public uint StructSize;
+        public ushort PageSize;
+        public ushort PointerFormat;
+        public ulong SegmentOffset;
+        public uint MaxValidPointer;
+        public ushort PageCount;
+    }
+
+    public enum MachODyldChainedPtr
+    {
+        DYLD_CHAINED_PTR_64 = 2,
+        DYLD_CHAINED_PTR_64_OFFSET = 6,
+    }
+
+    [VersionedStruct]
+    public partial struct MachODyldChainedPtr64Rebase
+    {
+        private ulong _value;
+
+        public ulong Target => _value & 0xfffffffff;
+        public ulong High8 => (_value >> 36) & 0xff;
+        public ulong Reserved => (_value >> (36 + 8)) & 0x7f;
+        public ulong Next => (_value >> (36 + 8 + 7)) & 0xfff;
+        public bool Bind => ((_value >> (36 + 8 + 7 + 12)) & 0x1) == 0x1;
     }
 }
