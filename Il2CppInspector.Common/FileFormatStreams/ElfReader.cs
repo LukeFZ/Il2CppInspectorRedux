@@ -223,7 +223,20 @@ namespace Il2CppInspector
             
             // Get dynamic table if it exists (must be done after rebasing)
             if (GetProgramHeader(Elf.PT_DYNAMIC) is TPHdr PT_DYNAMIC)
-                DynamicTable = ReadArray<elf_dynamic<TWord>>(conv.Long(PT_DYNAMIC.p_offset), (int) (conv.Long(PT_DYNAMIC.p_filesz) / Sizeof(typeof(elf_dynamic<TWord>))));
+            {
+                // Important: do not use p_offset here!
+                // Only load sections should be loaded, which should also include the memory region that contains the dynamic section.
+                // This just provides the virtual address of the section.
+                // Some binaries may use the offset here to point to a fake version of the dynamic section,
+                // making relocation resolution and subsequent analysis fail.
+                // Reference for Android: 
+                // phdr_table_get_dynamic_section, https://cs.android.com/android/platform/superproject/main/+/main:bionic/linker/linker_phdr.cpp
+
+                var dynamicAddr = conv.ULong(PT_DYNAMIC.p_vaddr);
+                var dynamicSize = (int)(conv.Long(PT_DYNAMIC.p_filesz) / Sizeof(typeof(elf_dynamic<TWord>)));
+
+                DynamicTable = ReadMappedArray<elf_dynamic<TWord>>(dynamicAddr, dynamicSize);
+            }
 
             // Get offset of code section
             var codeSegment = PHT.First(x => ((Elf) x.p_flags & Elf.PF_X) == Elf.PF_X);
@@ -388,7 +401,8 @@ namespace Il2CppInspector
             WriteArray(conv.Long(PT_DYNAMIC.p_offset), dt);
         }
 
-        private void processSymbols() {
+        private void processSymbols()
+        {
             StatusUpdate("Processing symbols");
 
             // Three possible symbol tables in ELF files
