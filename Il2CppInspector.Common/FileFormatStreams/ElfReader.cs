@@ -304,7 +304,7 @@ namespace Il2CppInspector
             }
 
             // Process relocations
-            var relsz = Sizeof(typeof(TSym));
+            var relsz = (uint)Sizeof(typeof(TSym));
 
             var currentRel = 0;
             var totalRel = rels.Count();
@@ -450,7 +450,16 @@ namespace Il2CppInspector
             symbolTable.Clear();
             var exportTable = new Dictionary<string, Export>();
 
-            foreach (var pTab in pTables) {
+            var alreadyProcessed = new List<(TWord offset, TWord count)>();
+
+            foreach (var pTab in pTables)
+            {
+                if (alreadyProcessed.Any(x =>
+                        conv.ULong(x.offset) == conv.ULong(pTab.offset) &&
+                        conv.ULong(x.count) >= conv.ULong(pTab.count)))
+                    continue;
+
+                alreadyProcessed.Add((pTab.offset, pTab.count));
                 var symbol_table = ReadArray<TSym>(conv.Long(pTab.offset), conv.Int(pTab.count));
 
                 foreach (var symbol in symbol_table)
