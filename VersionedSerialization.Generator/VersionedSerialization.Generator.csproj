@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0</TargetFrameworks>
+		<TargetFramework>netstandard2.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<AnalyzerRoslynVersion>4.10</AnalyzerRoslynVersion>
 		<RoslynApiVersion>4.10.0</RoslynApiVersion>
