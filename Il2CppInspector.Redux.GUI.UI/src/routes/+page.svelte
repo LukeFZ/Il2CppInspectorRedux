@@ -8,7 +8,6 @@
         type DragDropEvent,
     } from "@tauri-apps/api/webview";
     import type { UnlistenFn } from "@tauri-apps/api/event";
-    import { goto } from "$app/navigation";
     import { open } from "@tauri-apps/plugin-dialog";
 
     async function chooseFile(event: Event) {

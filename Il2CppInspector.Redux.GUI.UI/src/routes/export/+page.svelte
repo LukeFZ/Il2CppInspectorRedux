@@ -4,6 +4,7 @@
         buttonVariants,
     } from "$lib/components/ui/button/button.svelte";
     import * as Tooltip from "$lib/components/ui/tooltip";
+    import { exportState } from "$lib/export.svelte";
     import { cn } from "$lib/utils";
     import type { PageProps } from "./$types";
 
@@ -46,6 +47,11 @@
     </div>
     <div class="mx-5 mb-3 flex flex-row-reverse justify-between">
         <Button href="/" variant="outline">Cancel</Button>
+        {#if exportState.hasExportQueued}
+            <Button onclick={() => exportState.startExport()} variant="default"
+                >Start export</Button
+            >
+        {/if}
         <Button href="/advanced" variant="ghost">Advanced</Button>
     </div>
 </div>

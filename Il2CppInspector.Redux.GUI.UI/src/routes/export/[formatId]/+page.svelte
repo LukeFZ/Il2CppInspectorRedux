@@ -8,8 +8,9 @@
     import { goto } from "$app/navigation";
     import PathSelector from "$lib/components/settings/path-selector.svelte";
     import { open } from "@tauri-apps/plugin-dialog";
-    import { signalRState } from "$lib/signalr/api.svelte";
     import { toast } from "svelte-sonner";
+    import { onMount } from "svelte";
+    import { exportState } from "$lib/export.svelte";
 
     let formatId = page.params.formatId;
     let { data }: PageProps = $props();
@@ -115,14 +116,10 @@
             values.map((x) => [x.setting.name.id, x.selected.toString()]),
         );
 
-        await signalRState.api?.server.queueExport(
-            formatId,
-            exportDirectory,
-            settings,
-        );
+        await exportState.queueExport(formatId, exportDirectory, settings);
 
         if (shouldStartExport) {
-            await signalRState.api?.server.startExport();
+            await exportState.startExport();
         } else {
             toast.info("Successfully queued export.");
         }
@@ -136,6 +133,11 @@
         }
 
         return true;
+    });
+
+    onMount(() => {
+        // we dismiss all toasts so that they don't block the export/queue buttons
+        toast.dismiss();
     });
 </script>
 
