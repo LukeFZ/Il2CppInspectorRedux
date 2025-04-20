@@ -52,19 +52,15 @@ jobs:
       - name: Restore NuGet packages
         run: dotnet restore -r win-x64 ./Il2CppInspector.Redux.GUI
       
-      - name: Build GUI C# component
+        # note: we embed the exe directly into the c# component, and it it is built alongside it
+        # in another msbuild target.
+      - name: Build GUI
         run: dotnet publish ./Il2CppInspector.Redux.GUI/Il2CppInspector.Redux.GUI.csproj -r win-x64 --no-self-contained
-
-      - name: Build GUI TS component
-        run: pnpm tauri build --no-bundle
-        working-directory: ./Il2CppInspector.Redux.GUI.UI
 
       - name: Copy components to output directory
         run: |
            mkdir ./build_output
-           mkdir ./build_output/resources
            cp ./Il2CppInspector.Redux.GUI/bin/Release/net9.0/win-x64/publish/Il2CppInspector.Redux.GUI.exe ./build_output/
-           cp ./Il2CppInspector.Redux.GUI.UI/src-tauri/target/release/il2cppinspectorredux.exe ./build_output/resources/
 
       - name: Upload GUI Artifact
         uses: actions/upload-artifact@v4

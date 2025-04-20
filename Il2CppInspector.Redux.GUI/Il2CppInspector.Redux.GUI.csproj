@@ -5,15 +5,23 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <InvariantGlobalization>true</InvariantGlobalization>
-    <PublishAot>false</PublishAot>
-	  <!-- todo: enable this once the app is aot compliant! -->
-	  <OutputType Condition="'$(Configuration)' == 'Release'">WinExe</OutputType>
-	  <PublishSingleFile>true</PublishSingleFile>
+      <!-- todo: enable this once the app is aot compliant! -->
+      <PublishAot>false</PublishAot>
+      <OutputType Condition="'$(Configuration)' == 'Release'">WinExe</OutputType>
+      <PublishSingleFile>true</PublishSingleFile>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Bin2Object\Bin2Object\Bin2Object.csproj" />
     <ProjectReference Include="..\Il2CppInspector.Common\Il2CppInspector.csproj" />
   </ItemGroup>
+
+    <!-- todo: this needs to be adjusted for multiplatform support -->
+    <Target Name="BuildTauriFrontend" BeforeTargets="BeforeBuild">
+        <Exec Command="pnpm tauri build --no-bundle" WorkingDirectory="..\Il2CppInspector.Redux.GUI.UI" />
+        <ItemGroup>
+            <EmbeddedResource Include="..\Il2CppInspector.Redux.GUI.UI\src-tauri\target\release\il2cppinspectorredux.exe" />
+        </ItemGroup>
+    </Target>
 
 </Project>
