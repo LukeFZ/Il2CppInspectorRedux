@@ -37,4 +37,8 @@ export class SignalRServerApi {
             "GetPotentialUnityVersions",
         );
     }
+
+    async exportIl2CppFiles(targetDirectory: string) {
+        return await this.connection.send("ExportIl2CppFiles", targetDirectory);
+    }
 }

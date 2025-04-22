@@ -155,7 +155,7 @@ public class UiContext
                     {
                         if (await TryLoadMetadataFromStream(client, stream))
                         {
-                            await client.ShowSuccessToast($"Loaded metadata from {inputFile}", cancellationToken);
+                            await client.ShowSuccessToast($"Loaded metadata (v{_metadata!.Version}) from {inputFile}", cancellationToken);
                         }
                     }
                     else if (_binary == null && PathHeuristics.IsBinaryPath(inputFile))
@@ -175,7 +175,7 @@ public class UiContext
             {
                 if (await TryInitializeInspector(client))
                 {
-                    await client.ShowSuccessToast("Successfully loaded IL2CPP data!", cancellationToken);
+                    await client.ShowSuccessToast($"Successfully loaded IL2CPP (v{_appModels[0].Package.Version}) data!", cancellationToken);
                     await client.OnImportCompleted(cancellationToken);
                 }
             }
@@ -221,5 +221,27 @@ public class UiContext
     public Task<List<string>> GetPotentialUnityVersions()
     {
         return Task.FromResult(_potentialUnityVersions.Select(x => x.VersionRange.Min.ToString()).ToList());
+    }
+
+    public async Task ExportIl2CppFiles(UiClient client, string outputDirectory, CancellationToken cancellationToken = default)
+    {
+        Debug.Assert(_appModels.Count > 0);
+        var pkg = _appModels[0].Package;
+
+        await using (await LoadingSession.Start(client))
+        {
+            await Task.Run(async () =>
+            {
+                Directory.CreateDirectory(outputDirectory);
+
+                await client.ShowLogMessage("Extracting IL2CPP binary", cancellationToken);
+                pkg.SaveBinaryToFile(Path.Join(outputDirectory, pkg.BinaryImage.DefaultFilename));
+
+                await client.ShowLogMessage("Extracting IL2CPP metadata", cancellationToken);
+                pkg.SaveMetadataToFile(Path.Join(outputDirectory, "global-metadata.dat"));
+
+                await client.ShowSuccessToast("Successfully extracted IL2CPP files.", cancellationToken);
+            }, cancellationToken);
+        }
     }
 }

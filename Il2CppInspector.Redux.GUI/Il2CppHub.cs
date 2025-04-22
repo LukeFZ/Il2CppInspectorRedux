@@ -44,4 +44,9 @@ internal class Il2CppHub : Hub
     {
         return await State.GetPotentialUnityVersions();
     }
+
+    public async Task ExportIl2CppFiles(string outputDirectory)
+    {
+        await State.ExportIl2CppFiles(Client, outputDirectory);
+    }
 }
