@@ -85,6 +85,7 @@ public class UiContext
                 Please check the binary file in a disassembler to ensure that it is an unencrypted IL2CPP binary before submitting a bug report!
                 """);
 
+            _binary = null;
             return false;
         }
 
