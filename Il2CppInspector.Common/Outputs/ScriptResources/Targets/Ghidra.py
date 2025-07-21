@@ -6,6 +6,7 @@ from ghidra.program.model.symbol import SourceType
 from ghidra.program.model.symbol import RefType
 from ghidra.app.cmd.label import DemanglerCmd
 from ghidra.app.services import DataTypeManagerService
+from java.lang import Long
 
 #try:
 #	from typing import TYPE_CHECKING
@@ -20,6 +21,9 @@ from ghidra.app.services import DataTypeManagerService
 
 class GhidraDisassemblerInterface(BaseDisassemblerInterface):
 	supports_fake_string_segment = False
+
+	def _to_address(self, value):
+		return toAddr(Long(value))
 
 	def get_script_directory(self) -> str: 
 		return getSourceFile().getParentFile().toString()
@@ -39,7 +43,7 @@ class GhidraDisassemblerInterface(BaseDisassemblerInterface):
 		# Without this, Ghidra may not analyze the binary correctly and you will just waste your time
 		# If 0 doesn't work for you, replace it with the base address from the output of the CLI or GUI
 		if currentProgram.getExecutableFormat().endswith('(ELF)'):
-			currentProgram.setImageBase(toAddr(0), True)
+			currentProgram.setImageBase(self._to_address(0), True)
 		
 		# Don't trigger decompiler
 		setAnalysisOption(currentProgram, "Call Convention ID", "false")
@@ -48,7 +52,7 @@ class GhidraDisassemblerInterface(BaseDisassemblerInterface):
 		pass
 
 	def define_function(self, address: int, end: int | None = None):
-		address = toAddr(address)
+		address = self._to_address(address)
 		# Don't override existing functions
 		fn = getFunctionAt(address)
 		if fn is None:
@@ -61,7 +65,7 @@ class GhidraDisassemblerInterface(BaseDisassemblerInterface):
 		
 		t = getDataTypes(type)[0]
 		a = ArrayDataType(t, count, t.getLength())
-		address = toAddr(address)
+		address = self._to_address(address)
 		removeDataAt(address)
 		createData(address, a)
 
@@ -71,7 +75,7 @@ class GhidraDisassemblerInterface(BaseDisassemblerInterface):
 		
 		try:
 			t = getDataTypes(type)[0]
-			address = toAddr(address)
+			address = self._to_address(address)
 			removeDataAt(address)
 			createData(address, t)
 		except:
@@ -79,16 +83,16 @@ class GhidraDisassemblerInterface(BaseDisassemblerInterface):
 
 	def set_function_type(self, address: int, type: str):
 		typeSig = CParserUtils.parseSignature(DataTypeManagerService@None, currentProgram, type)
-		ApplyFunctionSignatureCmd(toAddr(address), typeSig, SourceType.USER_DEFINED, False, True).applyTo(currentProgram)
+		ApplyFunctionSignatureCmd(self._to_address(address), typeSig, SourceType.USER_DEFINED, False, True).applyTo(currentProgram)
 
 	def set_data_comment(self, address: int, cmt: str):
-		setEOLComment(toAddr(address), cmt)
+		setEOLComment(self._to_address(address), cmt)
 
 	def set_function_comment(self, address: int, cmt: str):
-		setPlateComment(toAddr(address), cmt)
+		setPlateComment(self._to_address(address), cmt)
 
 	def set_data_name(self, address: int, name: str):
-		address = toAddr(address)
+		address = self._to_address(address)
 
 		if len(name) > 2000:
 			print("Name length exceeds 2000 characters, skipping (%s)" % name)
@@ -107,7 +111,7 @@ class GhidraDisassemblerInterface(BaseDisassemblerInterface):
 		return self.set_data_name(address, name)
 
 	def add_cross_reference(self, from_address: int, to_address: int): 
-		self.xrefs.addMemoryReference(toAddr(from_address), toAddr(to_address), RefType.DATA, SourceType.USER_DEFINED, 0)
+		self.xrefs.addMemoryReference(self._to_address(from_address), self._to_address(to_address), RefType.DATA, SourceType.USER_DEFINED, 0)
 
 	def import_c_typedef(self, type_def: str):
 		# Code declarations are not supported in Ghidra
