@@ -786,10 +786,7 @@ namespace Il2CppInspector.Reflection
             if (Definition.Bitfield.EnumType) {
                 IsEnum = true;
 
-                var enumUnderlyingTypeIndex = Assembly.Model.Package.Version >= MetadataVersions.V350
-                    ? Definition.ParentIndex
-                    : Definition.ElementTypeIndex;
-
+                var enumUnderlyingTypeIndex = Definition.GetEnumElementTypeIndex(Assembly.Model.Package.Version);
                 enumUnderlyingTypeReference = TypeRef.FromReferenceIndex(Assembly.Model, enumUnderlyingTypeIndex);
             }
 

@@ -163,9 +163,7 @@ public static class BlobReader
             var typeHandle = inspector.TypeReferences[typeIndex].Data.KlassIndex;
             enumType = inspector.TypeDefinitions[typeHandle];
 
-            var elementTypeIndex = inspector.Version >= MetadataVersions.V350
-                ? enumType.ParentIndex
-                : enumType.ElementTypeIndex;
+            var elementTypeIndex = enumType.GetEnumElementTypeIndex(inspector.Version);
 
             var elementTypeHandle = inspector.TypeReferences[elementTypeIndex].Data.KlassIndex;
             var elementType = inspector.TypeDefinitions[elementTypeHandle];
