@@ -92,7 +92,7 @@ namespace Il2CppInspector
             // Set object versioning for Bin2Object from metadata version
             Version = new StructVersion(Header.Version);
 
-            if (Version < MetadataVersions.V160 || Version > MetadataVersions.V310) {
+            if (Version < MetadataVersions.V160 || Version > MetadataVersions.V350) {
                 throw new InvalidOperationException($"The supplied metadata file is not of a supported version ({Header.Version}).");
             }
 
@@ -215,9 +215,26 @@ namespace Il2CppInspector
             else {
                 var stringLiteralList = ReadVersionedObjectArray<Il2CppStringLiteral>(Header.StringLiteralOffset, Header.StringLiteralSize / Sizeof<Il2CppStringLiteral>());
 
-                StringLiterals = new string[stringLiteralList.Length];
-                for (var i = 0; i < stringLiteralList.Length; i++)
-                    StringLiterals[i] = ReadFixedLengthString(Header.StringLiteralDataOffset + stringLiteralList[i].DataIndex, (int)stringLiteralList[i].Length);
+                if (Version >= MetadataVersions.V350)
+                {
+                    StringLiterals = new string[stringLiteralList.Length - 1];
+                    for (var i = 0; i < stringLiteralList.Length; i++)
+                    {
+                        var currentStringDataIndex = stringLiteralList[i].DataIndex;
+                        var nextStringDataIndex = stringLiteralList[i + 1].DataIndex;
+                        var stringLength = nextStringDataIndex - currentStringDataIndex;
+
+                        StringLiterals[i] = ReadFixedLengthString(Header.StringLiteralDataOffset + currentStringDataIndex, stringLength);
+                    }
+
+                }
+                else
+                {
+                    StringLiterals = new string[stringLiteralList.Length];
+                    for (var i = 0; i < stringLiteralList.Length; i++)
+                        StringLiterals[i] = ReadFixedLengthString(Header.StringLiteralDataOffset + stringLiteralList[i].DataIndex, (int)stringLiteralList[i].Length);
+
+                }
             }
 
             // Post-processing hook

@@ -32,6 +32,8 @@ public partial record struct Il2CppTypeDefinition
 
     public TypeIndex DeclaringTypeIndex { get; private set; }
     public TypeIndex ParentIndex { get; private set; }
+
+    [VersionCondition(LessThan = "31.0")]
     public TypeIndex ElementTypeIndex { get; private set; }
 
     [VersionCondition(LessThan = "24.1")]

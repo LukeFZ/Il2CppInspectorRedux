@@ -754,8 +754,9 @@ Unity version | IL2CPP version | Support
 2020.2.4-2020.3.x | 27.1 | Working
 2021.1.0-2021.1.x | 27.2 | Working
 2021.2.0-2021.2.x | 29 | Working
-2021.3.0+ | 29.1 | Working
-2022.3.33+ | 31(.1) | Working
+2021.3.0-??? | 29.1 | Working
+2022.3.33-6000.2.x | 31(.1) | Working
+6000.3.0a2+ | 35 | Working
 
 Please refer to the companion repository https://github.com/nneonneo/Il2CppVersions if you would like to track the changes between each IL2CPP release version.
 

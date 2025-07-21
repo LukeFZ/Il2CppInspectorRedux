@@ -13,6 +13,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using Il2CppInspector.Next;
 using Il2CppInspector.Next.BinaryMetadata;
 using Il2CppInspector.Next.Metadata;
 
@@ -784,7 +785,12 @@ namespace Il2CppInspector.Reflection
             // Enumerations - bit 1 of bitfield indicates this (also the baseTypeReference will be System.Enum)
             if (Definition.Bitfield.EnumType) {
                 IsEnum = true;
-                enumUnderlyingTypeReference = TypeRef.FromReferenceIndex(Assembly.Model, Definition.ElementTypeIndex);
+
+                var enumUnderlyingTypeIndex = Assembly.Model.Package.Version >= MetadataVersions.V350
+                    ? Definition.ParentIndex
+                    : Definition.ElementTypeIndex;
+
+                enumUnderlyingTypeReference = TypeRef.FromReferenceIndex(Assembly.Model, enumUnderlyingTypeIndex);
             }
 
             // Pass-by-reference type
