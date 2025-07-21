@@ -13,7 +13,7 @@ public static class DictionaryExtensions
     public static T GetAsEnumOrDefault<T>(this Dictionary<string, string> dict, string key, T defaultValue)
         where T : struct, Enum
     {
-        if (dict.TryGetValue(key, out var value) && Enum.TryParse<T>(value, out var enumResult))
+        if (dict.TryGetValue(key, out var value) && Enum.TryParse<T>(value, true, out var enumResult))
             return enumResult;
 
         return defaultValue;
