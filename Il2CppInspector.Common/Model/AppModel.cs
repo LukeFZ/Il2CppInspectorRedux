@@ -40,6 +40,9 @@ namespace Il2CppInspector.Model
         // The types are ordered to enable the production of code output without forward dependencies
         public List<CppType> DependencyOrderedCppTypes { get; private set; }
 
+        // Required forward definition types for the C++ type definitions
+        public List<CppType> RequiredForwardDefinitions { get; private set; } = [];
+
         // Composite mapping of all the .NET methods in the IL2CPP binary
         public MultiKeyDictionary<MethodBase, CppFnPtrType, AppMethod> Methods { get; } = new MultiKeyDictionary<MethodBase, CppFnPtrType, AppMethod>();
 
@@ -247,7 +250,7 @@ namespace Il2CppInspector.Model
                                 break;
                             }
 
-                            AddTypes(declarationGenerator.GenerateRemainingTypeDeclarations());
+                            AddTypes(definitions);
 
                             // Any method here SHOULD already be in the Methods list
                             // but we have seen one example where this is not the case for a MethodDef
@@ -304,6 +307,8 @@ namespace Il2CppInspector.Model
             foreach (var type in unusedConcreteTypes)
                 declarationGenerator.IncludeType(type);
             AddTypes(declarationGenerator.GenerateRemainingTypeDeclarations());
+
+            RequiredForwardDefinitions = declarationGenerator.GenerateRequiredForwardDefinitions();
 
             // Restore stdout
             Console.SetOut(stdout);
