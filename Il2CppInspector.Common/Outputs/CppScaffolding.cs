@@ -44,8 +44,13 @@ namespace Il2CppInspector.Outputs
 
                 // Write primitive type definitions for when we're not including other headers
                 writeCode($"""
-                       #define IS_LIBCLANG_DECOMPILER (defined(_IDACLANG_) || defined(_BINARYNINJA_))
-                       #define IS_DECOMPILER (defined(_GHIDRA_) || defined(_IDA_) || IS_LIBCLANG_DECOMPILER)
+                       #if defined(_IDACLANG_) || defined(_BINARYNINJA_)
+                       #define IS_LIBCLANG_DECOMPILER
+                       #endif
+                       
+                       #if defined(_GHIDRA_) || defined(_IDA_) || defined(IS_LIBCLANG_DECOMPILER)
+                       #define IS_DECOMPILER
+                       #endif
 
                        #if defined(_GHIDRA_) || defined(_IDA_)
                        typedef unsigned __int8 uint8_t;
@@ -58,7 +63,7 @@ namespace Il2CppInspector.Outputs
                        typedef __int64 int64_t;
                        #endif
                        
-                       #if IS_LIBCLANG_DECOMPILER
+                       #if defined(IS_LIBCLANG_DECOMPILER)
                        typedef unsigned char uint8_t;
                        typedef unsigned short uint16_t;
                        typedef unsigned int uint32_t;
@@ -67,21 +72,26 @@ namespace Il2CppInspector.Outputs
                        typedef short int16_t;
                        typedef int int32_t;
                        typedef long int64_t;
+                       
+                       #ifdef linux
+                       #undef linux
                        #endif
                        
-                       #if defined(_GHIDRA_) || IS_LIBCLANG_DECOMPILER
+                       #endif
+                       
+                       #if defined(_GHIDRA_) || defined(IS_LIBCLANG_DECOMPILER)
                        typedef int{_model.Package.BinaryImage.Bits}_t intptr_t;
                        typedef uint{_model.Package.BinaryImage.Bits}_t uintptr_t;
                        typedef uint{_model.Package.BinaryImage.Bits}_t size_t;
                        #endif
 
-                       #if !IS_DECOMPILER
+                       #ifndef IS_DECOMPILER
                        #define _CPLUSPLUS_
                        #endif
                        """);
 
                 if (_useBetterArraySize)
-                    writeCode("#define actual_il2cpp_array_size_t il2cpp_array_size_t");
+                    writeCode("#define il2cpp_array_size_t actual_il2cpp_array_size_t");
 
                 writeSectionHeader("IL2CPP internal types");
                 writeCode(_model.UnityHeaders.GetTypeHeaderText(_model.WordSizeBits));
@@ -96,7 +106,7 @@ namespace Il2CppInspector.Outputs
                                actual_il2cpp_array_size_t value;
                           } better_il2cpp_array_size_t;
                           
-                          #define better_il2cpp_array_size_t il2cpp_array_size_t
+                          #define il2cpp_array_size_t better_il2cpp_array_size_t
                           """);
 
                 if (_model.TargetCompiler == CppCompilerType.MSVC)
@@ -115,17 +125,20 @@ namespace Il2CppInspector.Outputs
                 }
 
                 // C does not support namespaces
-                writeCode("#if !IS_DECOMPILER");
+                writeCode("#ifndef IS_DECOMPILER");
                 writeCode("namespace app {");
                 writeCode("#endif");
                 writeLine("");
 
+                writeForwardDefinitions();
+
+                writeTypesForGroup("Required forward definitions", "required_forward_definitions");
                 writeTypesForGroup("Application types from method calls", "types_from_methods");
                 writeTypesForGroup("Application types from generic methods", "types_from_generic_methods");
                 writeTypesForGroup("Application types from usages", "types_from_usages");
                 writeTypesForGroup("Application unused value types", "unused_concrete_types");
 
-                writeCode("#if !IS_DECOMPILER");
+                writeCode("#ifndef IS_DECOMPILER");
                 writeCode("}");
                 writeCode("#endif");
             }
@@ -306,19 +319,32 @@ namespace Il2CppInspector.Outputs
             writeLine("");
         }
 
-        private void writeTypesForGroup(string header, string group) {
+        private void writeForwardDefinitions()
+        {
+            writeSectionHeader("Required forward definitions");
+            foreach (var cppType in _model.RequiredForwardDefinitions)
+                writeCode(cppType.ToString());
+        }
+
+        private void writeTypesForGroup(string header, string group) 
+        {
             writeSectionHeader(header);
             foreach (var cppType in _model.GetDependencyOrderedCppTypeGroup(group))
-                if (cppType is CppEnumType) {
+            {
+                if (cppType is CppEnumType)
+                {
                     // Ghidra can't process C++ enum base types
                     writeCode("#if defined(_CPLUSPLUS_)");
                     writeCode(cppType.ToString());
                     writeCode("#else");
                     writeCode(cppType.ToString("c"));
                     writeCode("#endif");
-                } else {
+                }
+                else
+                {
                     writeCode(cppType.ToString());
                 }
+            }
         }
         
         private void writeCode(string text) {
