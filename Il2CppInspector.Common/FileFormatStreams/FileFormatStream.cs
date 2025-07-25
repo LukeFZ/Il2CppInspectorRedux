@@ -176,7 +176,7 @@ namespace Il2CppInspector
                 try {
                     if (type.GetMethod("Load", BindingFlags.FlattenHierarchy | BindingFlags.Static | BindingFlags.Public,
                             null, new[] { typeof(BinaryObjectStream), typeof(LoadOptions), typeof(EventHandler<string>) }, null)
-                        .Invoke(null, new object[] { binaryObjectStream, loadOptions, statusCallback }) is IFileFormatStream loaded) {
+                        .Invoke(null, [binaryObjectStream, loadOptions, statusCallback]) is IFileFormatStream loaded) {
 
                         loaded.IsModified |= preProcessResult.IsStreamModified;
                         return loaded;
