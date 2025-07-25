@@ -456,4 +456,14 @@ namespace Il2CppInspector.Cpp
             return sb.ToString();
         }
     }
+
+    public class CppForwardDefinitionType : CppType
+    {
+        public CppForwardDefinitionType(string name) : base(name)
+        {
+
+        }
+
+        public override string ToString(string format = "") => $"struct {Name};";
+    }
 }

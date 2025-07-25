@@ -5,9 +5,6 @@
     All rights reserved.
 */
 
-using System;
-using System.Collections.Generic;
-
 namespace Il2CppInspector.Cpp
 {
     /// <summary>
@@ -65,9 +62,9 @@ namespace Il2CppInspector.Cpp
             // Uniquely name an object within the parent namespace
             public string GetName(T t) {
                 // If we've named this particular object before, just return that name
-                string name;
-                if (names.TryGetValue(t, out name))
+                if (names.TryGetValue(t, out var name))
                     return name;
+
                 // Obtain the mangled name for the object
                 name = keyFunc(t);
                 // Check if the mangled name has been given to another object - if it has,

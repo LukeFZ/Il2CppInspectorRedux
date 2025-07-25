@@ -4,15 +4,11 @@
     All rights reserved.
 */
 
-using System;
+using Il2CppInspector.Cpp.UnityHeaders;
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
-using Il2CppInspector.Cpp.UnityHeaders;
 
 namespace Il2CppInspector.Cpp
 {
@@ -23,7 +19,7 @@ namespace Il2CppInspector.Cpp
         public Dictionary<string, CppType> Types { get; }
 
         // All of the literal typedef aliases
-        public Dictionary<string, CppType> TypedefAliases { get; } = new Dictionary<string, CppType>();
+        public Dictionary<string, CppType> TypedefAliases { get; } = [];
 
         public CppType this[string s] => Types.ContainsKey(s)? Types[s] :
                                          TypedefAliases.ContainsKey(s)? TypedefAliases[s].AsAlias(s) : null;
@@ -34,7 +30,8 @@ namespace Il2CppInspector.Cpp
         // Architecture width in bits (32/64) - to determine pointer sizes
         public int WordSize { get; }
 
-        private Dictionary<string, ComplexValueType> complexTypeMap = new Dictionary<string, ComplexValueType> {
+        private Dictionary<string, ComplexValueType> complexTypeMap = new()
+        {
             ["struct"] = ComplexValueType.Struct,
             ["union"] = ComplexValueType.Union,
             ["enum"] = ComplexValueType.Enum
@@ -44,22 +41,23 @@ namespace Il2CppInspector.Cpp
         private string currentGroup = string.Empty;
         public void SetGroup(string group) => currentGroup = group;
 
-        private static readonly List<CppType> primitiveTypes = new List<CppType> {
-            new CppType("uint8_t", 8),
-            new CppType("uint16_t", 16),
-            new CppType("uint32_t", 32),
-            new CppType("uint64_t", 64),
-            new CppType("int8_t", 8),
-            new CppType("int16_t", 16),
-            new CppType("int32_t", 32),
-            new CppType("int64_t", 64),
-            new CppType("char", 8),
-            new CppType("int", 32),
-            new CppType("float", 32),
-            new CppType("double", 64),
-            new CppType("bool", 8),
-            new CppType("void", 0)
-        };
+        private static readonly List<CppType> primitiveTypes =
+        [
+            new("uint8_t", 8),
+            new("uint16_t", 16),
+            new("uint32_t", 32),
+            new("uint64_t", 64),
+            new("int8_t", 8),
+            new("int16_t", 16),
+            new("int32_t", 32),
+            new("int64_t", 64),
+            new("char", 8),
+            new("int", 32),
+            new("float", 32),
+            new("double", 64),
+            new("bool", 8),
+            new("void", 0)
+        ];
 
         public CppTypeCollection(int wordSize) {
             if (wordSize != 32 && wordSize != 64)
@@ -538,15 +536,18 @@ namespace Il2CppInspector.Cpp
         public CppComplexType Struct(string name = "", int alignmentBytes = 0) {
             if (!string.IsNullOrEmpty(name) && Types.TryGetValue(name, out var cppType))
                 return (CppComplexType) cppType;
+            
             var type = new CppComplexType(ComplexValueType.Struct) {Name = name, Group = currentGroup, AlignmentBytes = alignmentBytes};
             if (!string.IsNullOrEmpty(name))
                 Add(type);
+            
             return type;
         }
 
         public CppComplexType Union(string name = "", int alignmentBytes = 0) {
             if (!string.IsNullOrEmpty(name) && Types.TryGetValue(name, out var cppType))
                 return (CppComplexType) cppType;
+
             var type = new CppComplexType(ComplexValueType.Union) {Name = name, Group = currentGroup, AlignmentBytes = alignmentBytes};
             if (!string.IsNullOrEmpty(name))
                 Add(type);
@@ -554,9 +555,13 @@ namespace Il2CppInspector.Cpp
         }
 
         public CppEnumType Enum(CppType underlyingType, string name = "") {
+            if (!string.IsNullOrEmpty(name) && Types.TryGetValue(name, out var cppType))
+                return (CppEnumType)cppType;
+
             var type = new CppEnumType(underlyingType) {Name = name, Group = currentGroup};
             if (!string.IsNullOrEmpty(name))
                 Add(type);
+
             return type;
         }
 
@@ -585,11 +590,17 @@ namespace Il2CppInspector.Cpp
             cppTypes.AddFromDeclarationText(apis);
 
             // Don't allow any of the header type names or primitive type names to be re-used
-            foreach (var type in cppTypes.Types.Values)
-                declGen?.TypeNamespace.TryReserveName(type.Name);
+            foreach (var type in cppTypes.Types.Keys)
+            {
+                declGen?.TypeNamespace.TryReserveName(type);
+                declGen?.GlobalsNamespace.TryReserveName(type);
+            }
 
-            foreach (var typedef in cppTypes.TypedefAliases.Values)
-                declGen?.GlobalsNamespace.TryReserveName(typedef.Name);
+            foreach (var typedef in cppTypes.TypedefAliases.Keys)
+            {
+                declGen?.TypeNamespace.TryReserveName(typedef);
+                declGen?.GlobalsNamespace.TryReserveName(typedef);
+            }
 
             cppTypes.SetGroup("");
 
