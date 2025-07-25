@@ -427,9 +427,6 @@ public class CppDeclarationGenerator
     /// <param name="ti"></param>
     public void IncludeType(TypeInfo ti) 
     {
-        if (ti.Name.Contains("UQueryState"))
-            Console.WriteLine("meow");
-
         if (_visitedTypes.Contains(ti))
             return;
 
