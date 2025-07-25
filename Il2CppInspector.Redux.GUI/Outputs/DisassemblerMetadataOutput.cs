@@ -27,7 +27,7 @@ public class DisassemblerMetadataOutput : IOutputFormatProvider
     {
         var settings = new Settings(settingsDict);
 
-        await client.ShowLogMessage($"Bulding application model for Unity {settings.UnityVersion}/{CppCompilerType.GCC}");
+        await client.ShowLogMessage($"Building application model for Unity {settings.UnityVersion}/{CppCompilerType.GCC}");
         model.Build(new UnityVersion(settings.UnityVersion), CppCompilerType.GCC);
 
         var headerPath = Path.Join(outputPath, "il2cpp.h");

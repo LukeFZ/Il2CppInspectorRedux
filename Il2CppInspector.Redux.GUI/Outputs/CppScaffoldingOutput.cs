@@ -19,7 +19,7 @@ public class CppScaffoldingOutput : IOutputFormatProvider
     {
         var settings = new Settings(settingsDict);
         
-        await client.ShowLogMessage($"Bulding application model for Unity {settings.UnityVersion}/{settings.Compiler}");
+        await client.ShowLogMessage($"Building application model for Unity {settings.UnityVersion}/{settings.Compiler}");
         model.Build(new UnityVersion(settings.UnityVersion), settings.Compiler);
 
         await client.ShowLogMessage("Generating C++ scaffolding");
