@@ -267,21 +267,6 @@ namespace Il2CppInspector
 
             StatusUpdate("Finding relocations");
 
-            // Two types: add value from offset in image, and add value from specified addend
-            foreach (var relSection in GetSections(Elf.SHT_REL)) {
-                reverseMapExclusions.Add(((uint) conv.Int(relSection.sh_offset), (uint) (conv.Int(relSection.sh_offset) + conv.Int(relSection.sh_size) - 1)));
-                rels.UnionWith(
-                    from rel in ReadArray<elf_rel<TWord>>(conv.Long(relSection.sh_offset), conv.Int(conv.Div(relSection.sh_size, relSection.sh_entsize)))
-                    select new ElfReloc(rel, SHT[relSection.sh_link].sh_offset));
-            }
-
-            foreach (var relaSection in GetSections(Elf.SHT_RELA)) {
-                reverseMapExclusions.Add(((uint) conv.Int(relaSection.sh_offset), (uint) (conv.Int(relaSection.sh_offset) + conv.Int(relaSection.sh_size) - 1)));
-                rels.UnionWith(
-                    from rela in ReadArray<elf_rela<TWord>>(conv.Long(relaSection.sh_offset), conv.Int(conv.Div(relaSection.sh_size, relaSection.sh_entsize)))
-                    select new ElfReloc(rela, SHT[relaSection.sh_link].sh_offset));
-            }
-
             // Relocations in dynamic section
             if (GetDynamicEntry(Elf.DT_REL) is elf_dynamic<TWord> dt_rel) {
                 var dt_rel_count = conv.Int(conv.Div(GetDynamicEntry(Elf.DT_RELSZ).d_un, GetDynamicEntry(Elf.DT_RELENT).d_un));
@@ -314,7 +299,26 @@ namespace Il2CppInspector
                 if (currentRel % 1000 == 0)
                     StatusUpdate($"Processing relocations ({currentRel * 100 / totalRel:F0}%)");
 
-                var symValue = ReadObject<TSym>(conv.Long(rel.SymbolTable) + conv.Long(rel.SymbolIndex) * relsz).st_value; // S
+                TWord symValue;
+
+                try
+                {
+                    // man this really needs a full overhaul
+                    symValue = ReadMappedObject<TSym>(conv.ULong(rel.SymbolTable) + conv.ULong(rel.SymbolIndex) * relsz)
+                        .st_value; // S
+                }
+                catch (InvalidOperationException)
+                {
+                    try
+                    {
+                        symValue = ReadObject<TSym>(conv.Long(rel.SymbolTable) + conv.Long(rel.SymbolIndex) * relsz)
+                            .st_value; // S
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        continue;
+                    }
+                }
 
                 // Ignore relocations into memory addresses not mapped from the image
                 try {
@@ -455,8 +459,7 @@ namespace Il2CppInspector
             foreach (var pTab in pTables)
             {
                 if (alreadyProcessed.Any(x =>
-                        conv.ULong(x.offset) == conv.ULong(pTab.offset) &&
-                        conv.ULong(x.count) >= conv.ULong(pTab.count)))
+                        conv.ULong(x.offset) == conv.ULong(pTab.offset)))
                     continue;
 
                 alreadyProcessed.Add((pTab.offset, pTab.count));
