@@ -104,9 +104,7 @@ namespace Il2CppInspector.Outputs
                           {
                                int32_t size;
                                actual_il2cpp_array_size_t value;
-                          } better_il2cpp_array_size_t;
-                          
-                          #define il2cpp_array_size_t better_il2cpp_array_size_t
+                          } il2cpp_array_size_t;
                           """);
 
                 if (_model.TargetCompiler == CppCompilerType.MSVC)
