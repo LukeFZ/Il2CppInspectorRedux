@@ -14,6 +14,7 @@ using Il2CppInspector.Cpp;
 using Il2CppInspector.Cpp.UnityHeaders;
 using Il2CppInspector.Next;
 using Il2CppInspector.Reflection;
+using Spectre.Console;
 
 namespace Il2CppInspector.Model
 {
@@ -152,12 +153,12 @@ namespace Il2CppInspector.Model
             UnityHeaders = unityVersion != null ? UnityHeaders.GetHeadersForVersion(unityVersion) : UnityHeaders.GuessHeadersForBinary(TypeModel.Package.Binary).Last();
             UnityVersion = unityVersion ?? UnityHeaders.VersionRange.Min;
 
-            Console.WriteLine($"Selected Unity version(s) {UnityHeaders.VersionRange} (types: {UnityHeaders.TypeHeaderResource.VersionRange}, APIs: {UnityHeaders.APIHeaderResource.VersionRange})");
+            AnsiConsole.WriteLine($"Selected Unity version(s) {UnityHeaders.VersionRange} (types: {UnityHeaders.TypeHeaderResource.VersionRange}, APIs: {UnityHeaders.APIHeaderResource.VersionRange})");
 
             // Check for matching metadata and binary versions
             if (UnityHeaders.MetadataVersion != Image.Version) {
-                Console.WriteLine($"Warning: selected version {UnityVersion} (metadata version {UnityHeaders.MetadataVersion})" +
-                                    $" does not match metadata version {Image.Version}.");
+                AnsiConsole.WriteLine($"Warning: selected version {UnityVersion} (metadata version {UnityHeaders.MetadataVersion})" +
+                                      $" does not match metadata version {Image.Version}.");
             }
 
             // Initialize declaration generator to process every type in the binary

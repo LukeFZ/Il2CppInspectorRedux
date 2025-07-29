@@ -4,6 +4,11 @@
     All rights reserved.
 */
 
+using Il2CppInspector.PluginAPI;
+// This is the ONLY line to update when the API version changes
+using Il2CppInspector.PluginAPI.V100;
+using McMaster.NETCore.Plugins;
+using Spectre.Console;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -12,11 +17,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using McMaster.NETCore.Plugins;
-using Il2CppInspector.PluginAPI;
-
-// This is the ONLY line to update when the API version changes
-using Il2CppInspector.PluginAPI.V100;
 
 namespace Il2CppInspector
 {

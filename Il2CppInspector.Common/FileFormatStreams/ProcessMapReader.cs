@@ -4,11 +4,12 @@
     All rights reserved.
 */
 
+using NoisyCowStudios.Bin2Object;
+using Spectre.Console;
 using System;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using NoisyCowStudios.Bin2Object;
 
 namespace Il2CppInspector
 {
@@ -100,7 +101,7 @@ namespace Il2CppInspector
                     // Get the entire remaining chunk, or to the end of the file if it doesn't contain the end of the chunk
                     var length = (uint) Math.Min(chunk.Memory.End - memoryNext, source.Length);
 
-                    Console.WriteLine($"Writing {length:x8} bytes from {Path.GetFileName(file.Name)} +{fileStart:x8} ({memoryNext:x8}) to target {il2cpp.Position:x8}");
+                    AnsiConsole.WriteLine($"Writing {length:x8} bytes from {Path.GetFileName(file.Name)} +{fileStart:x8} ({memoryNext:x8}) to target {il2cpp.Position:x8}");
 
                     // Can't use Stream.CopyTo as it doesn't support length parameter
                     var buffer = new byte[length];

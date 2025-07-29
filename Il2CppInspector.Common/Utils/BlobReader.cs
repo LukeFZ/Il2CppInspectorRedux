@@ -4,6 +4,7 @@ using System.Diagnostics;
 using Il2CppInspector.Next;
 using Il2CppInspector.Next.BinaryMetadata;
 using Il2CppInspector.Next.Metadata;
+using Spectre.Console;
 
 namespace Il2CppInspector.Utils;
 
@@ -122,7 +123,7 @@ public static class BlobReader
                 }
                 catch (InvalidDataException)
                 {
-                    Console.WriteLine($"Found invalid compressed int at metadata address 0x{address:x8}. Reading as normal int.");
+                    AnsiConsole.WriteLine($"Found invalid compressed int at metadata address 0x{address:x8}. Reading as normal int.");
                     return blob.ReadInt32(address);
                 }
             }
@@ -142,7 +143,7 @@ public static class BlobReader
                 }
                 catch (InvalidDataException)
                 {
-                    Console.WriteLine($"Found invalid compressed uint at metadata address 0x{address:x8}. Reading as normal uint.");
+                    AnsiConsole.WriteLine($"Found invalid compressed uint at metadata address 0x{address:x8}. Reading as normal uint.");
                     return blob.ReadUInt32(address);
                 }
             }

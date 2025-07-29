@@ -4,6 +4,7 @@
     All rights reserved.
 */
 
+using Spectre.Console;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -51,7 +52,7 @@ namespace Il2CppInspector
 
         public override IFileFormatStream this[uint index] {
             get {
-                Console.WriteLine($"Extracting binary from {binaryFiles[index].FullName}");
+                AnsiConsole.WriteLine($"Extracting binary from {binaryFiles[index].FullName}");
                 IFileFormatStream loaded = null;
 
                 // ZipArchiveEntry does not support seeking so we have to close and re-open for each possible load format

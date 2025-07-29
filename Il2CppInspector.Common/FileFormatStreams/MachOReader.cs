@@ -4,12 +4,13 @@
     All rights reserved.
 */
 
+using NoisyCowStudios.Bin2Object;
+using Spectre.Console;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using NoisyCowStudios.Bin2Object;
 
 namespace Il2CppInspector
 {
@@ -194,7 +195,7 @@ namespace Il2CppInspector
 
                 // TODO: Implement Mach-O relocations
                 if (rels.Any()) {
-                    Console.WriteLine("Mach-O file contains relocations (feature not yet implemented)");
+                    AnsiConsole.WriteLine("Mach-O file contains relocations (feature not yet implemented)");
                     break;
                 }
             }
@@ -288,7 +289,7 @@ namespace Il2CppInspector
                     : SymbolType.Unknown;
 
                 if (type == SymbolType.Unknown) {
-                    Console.WriteLine($"Unknown symbol type: {((int) ntype):x2}   {value:x16}   {name}");
+                    AnsiConsole.WriteLine($"Unknown symbol type: {((int) ntype):x2}   {value:x16}   {name}");
                 }
 
                 // Ignore duplicates
@@ -301,13 +302,13 @@ namespace Il2CppInspector
             var chainedFixupsHeader = ReadVersionedObject<MachODyldChainedFixupsHeader>(info.Offset);
             if (chainedFixupsHeader.FixupsVersion != 0)
             {
-                Console.WriteLine($"Unsupported chained fixups version: {chainedFixupsHeader.FixupsVersion}");
+                AnsiConsole.WriteLine($"Unsupported chained fixups version: {chainedFixupsHeader.FixupsVersion}");
                 return;
             }
 
             if (chainedFixupsHeader.ImportsFormat != 1 /* DYLD_CHAINED_IMPORT */)
             {
-                Console.WriteLine($"Unsupported chained fixups import format: {chainedFixupsHeader.ImportsFormat}");
+                AnsiConsole.WriteLine($"Unsupported chained fixups import format: {chainedFixupsHeader.ImportsFormat}");
                 return;
             }
 

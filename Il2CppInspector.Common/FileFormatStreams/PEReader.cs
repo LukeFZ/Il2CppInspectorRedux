@@ -4,13 +4,14 @@
     All rights reserved.
 */
 
+using NoisyCowStudios.Bin2Object;
+using Spectre.Console;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using NoisyCowStudios.Bin2Object;
 
 namespace Il2CppInspector
 {
@@ -102,7 +103,7 @@ namespace Il2CppInspector
             // Unpacking must be done starting here, one byte after the end of the headers
             // Packed or previously packed with Themida? This is purely for information
             if (sections.FirstOrDefault(x => x.Name == ".themida") is PESection _)
-                Console.WriteLine("Themida protection detected");
+                AnsiConsole.WriteLine("Themida protection detected");
 
             // Packed with anything (including Themida)?
             mightBePacked = sections.FirstOrDefault(x => x.Name == ".rdata") is null;

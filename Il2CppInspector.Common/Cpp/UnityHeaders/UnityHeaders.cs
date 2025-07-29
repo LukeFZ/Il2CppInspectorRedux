@@ -5,13 +5,14 @@
     All rights reserved.
 */
 
+using Il2CppInspector.Next;
+using Spectre.Console;
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Text.RegularExpressions;
-using Il2CppInspector.Next;
 using VersionedSerialization;
 
 namespace Il2CppInspector.Cpp.UnityHeaders
@@ -140,7 +141,7 @@ namespace Il2CppInspector.Cpp.UnityHeaders
             // No il2cpp exports? Just return the earliest version from the header range
             // The API version may be incorrect but should be a subset of the real API and won't cause C++ compile errors
             if (!exports.Any()) {
-                Console.WriteLine("No IL2CPP API exports found in binary - IL2CPP APIs will be unavailable in C++ project");
+                AnsiConsole.WriteLine("No IL2CPP API exports found in binary - IL2CPP APIs will be unavailable in C++ project");
 
                 return typeHeaders.Select(t => new UnityHeaders(t, 
                     apis.Last(a => a.VersionRange.Intersect(t.VersionRange) != null))).ToList();
@@ -161,7 +162,7 @@ namespace Il2CppInspector.Cpp.UnityHeaders
 
             if (apiMatches.Any()) {
                 // Intersect all API ranges with all header ranges to produce final list of possible ranges
-               Console.WriteLine("IL2CPP API discovery was successful");
+                AnsiConsole.WriteLine("IL2CPP API discovery was successful");
 
                 return typeHeaders.SelectMany(
                     t => apiMatches.Where(a => t.VersionRange.Intersect(a.VersionRange) != null)
@@ -170,7 +171,7 @@ namespace Il2CppInspector.Cpp.UnityHeaders
 
             // None of the possible API versions match the binary
             // Select the oldest API version from the group - C++ project compilation will fail
-            Console.WriteLine("No exact match for IL2CPP APIs found in binary - IL2CPP API availability in C++ project will be partial");
+            AnsiConsole.WriteLine("No exact match for IL2CPP APIs found in binary - IL2CPP API availability in C++ project will be partial");
 
             return typeHeaders.Select(t => new UnityHeaders(t, 
                 apis.Last(a => a.VersionRange.Intersect(t.VersionRange) != null))).ToList();

@@ -5,8 +5,11 @@
 */
 
 using Il2CppInspector.Next;
+using Il2CppInspector.Next.BinaryMetadata;
+using Il2CppInspector.Next.Metadata;
 using Il2CppInspector.Utils;
 using NoisyCowStudios.Bin2Object;
+using Spectre.Console;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -14,8 +17,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
-using Il2CppInspector.Next.BinaryMetadata;
-using Il2CppInspector.Next.Metadata;
 using VersionedSerialization;
 
 namespace Il2CppInspector
@@ -410,7 +411,7 @@ namespace Il2CppInspector
                     if (metadataFile != null) {
                         // Extract the metadata file to memory
                         if (!silent)
-                            Console.WriteLine($"Extracting metadata from (archive){Path.DirectorySeparatorChar}{metadataFile.FullName}");
+                            AnsiConsole.WriteLine($"Extracting metadata from (archive){Path.DirectorySeparatorChar}{metadataFile.FullName}");
 
                         metadataMemoryStream = new MemoryStream();
                         using var metadataStream = metadataFile.Open();
@@ -428,7 +429,7 @@ namespace Il2CppInspector
                 // IPAs will only have one binary (which may or may not be a UB covering multiple architectures)
                 if (ipaBinaryFolder != null) {
                     if (!silent)
-                        Console.WriteLine($"Extracting binary from {zipStreams.First()}{Path.DirectorySeparatorChar}{binaryFiles.First().FullName}");
+                        AnsiConsole.WriteLine($"Extracting binary from {zipStreams.First()}{Path.DirectorySeparatorChar}{binaryFiles.First().FullName}");
 
                     // Extract the binary file or package to memory
                     binaryMemoryStream = new MemoryStream();
@@ -531,7 +532,7 @@ namespace Il2CppInspector
                 return null;
             }
 
-            Console.WriteLine("Detected metadata version " + metadata.Version);
+            AnsiConsole.WriteLine("Detected metadata version " + metadata.Version);
 
             // Load the il2cpp code file (try all available file formats)
             IFileFormatStream stream;
@@ -559,16 +560,16 @@ namespace Il2CppInspector
 
             var processors = new List<Il2CppInspector>();
             foreach (var image in stream.Images) {
-                Console.WriteLine("Container format: " + image.Format);
-                Console.WriteLine("Container endianness: " + ((BinaryObjectStream) image).Endianness);
-                Console.WriteLine("Architecture word size: {0}-bit", image.Bits);
-                Console.WriteLine("Instruction set: " + image.Arch);
-                Console.WriteLine("Global offset: 0x{0:X16}", image.GlobalOffset);
+                AnsiConsole.WriteLine("Container format: " + image.Format);
+                AnsiConsole.WriteLine("Container endianness: " + ((BinaryObjectStream) image).Endianness);
+                AnsiConsole.WriteLine("Architecture word size: {0}-bit", image.Bits);
+                AnsiConsole.WriteLine("Instruction set: " + image.Arch);
+                AnsiConsole.WriteLine("Global offset: 0x{0:X16}", image.GlobalOffset);
 
                 // Architecture-agnostic load attempt
                 try {
                     if (Il2CppBinary.Load(image, metadata, statusCallback) is Il2CppBinary binary) {
-                        Console.WriteLine("IL2CPP binary version " + image.Version);
+                        AnsiConsole.WriteLine("IL2CPP binary version " + image.Version);
 
                         processors.Add(new Il2CppInspector(binary, metadata));
                     }
