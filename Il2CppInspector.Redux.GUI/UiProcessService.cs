@@ -23,6 +23,7 @@ public class UiProcessService(IHostApplicationLifetime lifetime) : BackgroundSer
             using var executable =
                 typeof(UiProcessService).Assembly.GetManifestResourceStream(
                     $"{typeof(UiProcessService).Namespace!}.{UiExecutableName}");
+
             if (executable == null)
                 throw new FileNotFoundException("Failed to open resource as stream.");
 

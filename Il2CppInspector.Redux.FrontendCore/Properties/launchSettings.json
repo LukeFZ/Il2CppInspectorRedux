@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Il2CppInspector.Redux.FrontendCore": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:43298;http://localhost:43299"
+    }
+  }
+}

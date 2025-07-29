@@ -1,7 +1,7 @@
 ﻿using Il2CppInspector.Model;
 using Il2CppInspector.Outputs;
 
-namespace Il2CppInspector.Redux.GUI.Outputs;
+namespace Il2CppInspector.Redux.FrontendCore.Outputs;
 
 public class DummyDllOutput : IOutputFormatProvider
 {

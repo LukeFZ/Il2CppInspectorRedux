@@ -1,11 +1,11 @@
 ﻿using System.Diagnostics;
 using Il2CppInspector.Cpp.UnityHeaders;
 using Il2CppInspector.Model;
-using Il2CppInspector.Redux.GUI.Outputs;
+using Il2CppInspector.Redux.FrontendCore.Outputs;
 using Il2CppInspector.Reflection;
 using Inspector = Il2CppInspector.Il2CppInspector;
 
-namespace Il2CppInspector.Redux.GUI;
+namespace Il2CppInspector.Redux.FrontendCore;
 
 public class UiContext
 {

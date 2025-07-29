@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 
-namespace Il2CppInspector.Redux.GUI;
+namespace Il2CppInspector.Redux.FrontendCore;
 
 internal class Il2CppHub : Hub
 {

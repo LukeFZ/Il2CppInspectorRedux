@@ -1,4 +1,4 @@
-﻿namespace Il2CppInspector.Redux.GUI;
+﻿namespace Il2CppInspector.Redux.FrontendCore;
 
 public class LoadingSession : IAsyncDisposable
 {

@@ -11,11 +11,6 @@
       <PublishSingleFile>true</PublishSingleFile>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Bin2Object\Bin2Object\Bin2Object.csproj" />
-    <ProjectReference Include="..\Il2CppInspector.Common\Il2CppInspector.csproj" />
-  </ItemGroup>
-
     <!-- todo: this needs to be adjusted for multiplatform support -->
     <Target Name="BuildTauriFrontend" BeforeTargets="BeforeBuild" Condition="'$(Configuration)' == 'Release'">
         <Exec Command="pnpm tauri build --no-bundle" WorkingDirectory="..\Il2CppInspector.Redux.GUI.UI" />
@@ -23,5 +18,8 @@
             <EmbeddedResource Include="..\Il2CppInspector.Redux.GUI.UI\src-tauri\target\release\il2cppinspectorredux.exe" />
         </ItemGroup>
     </Target>
+    <ItemGroup>
+      <ProjectReference Include="..\Il2CppInspector.Redux.FrontendCore\Il2CppInspector.Redux.FrontendCore.csproj" />
+    </ItemGroup>
 
 </Project>

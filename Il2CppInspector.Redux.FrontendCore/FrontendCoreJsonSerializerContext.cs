@@ -1,8 +1,8 @@
 using System.Text.Json.Serialization;
 
-namespace Il2CppInspector.Redux.GUI;
+namespace Il2CppInspector.Redux.FrontendCore;
 
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(List<string>))]
 [JsonSerializable(typeof(Dictionary<string, string>))]
-internal partial class AppJsonSerializerContext : JsonSerializerContext;
+public partial class FrontendCoreJsonSerializerContext : JsonSerializerContext;

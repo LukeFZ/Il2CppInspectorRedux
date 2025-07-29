@@ -1,6 +1,6 @@
 ﻿using Il2CppInspector.Model;
 
-namespace Il2CppInspector.Redux.GUI.Outputs;
+namespace Il2CppInspector.Redux.FrontendCore.Outputs;
 
 public interface IOutputFormat
 {

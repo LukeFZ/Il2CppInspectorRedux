@@ -1,4 +1,4 @@
-﻿namespace Il2CppInspector.Redux.GUI.Outputs;
+﻿namespace Il2CppInspector.Redux.FrontendCore.Outputs;
 
 public static class OutputFormatRegistry
 {
