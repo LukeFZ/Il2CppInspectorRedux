@@ -48,6 +48,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Il2CppInspector.Redux.GUI",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Il2CppInspector.Redux.FrontendCore", "Il2CppInspector.Redux.FrontendCore\Il2CppInspector.Redux.FrontendCore.csproj", "{D80D0FCE-4C9C-4BF1-8936-71DFB0B2D86A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Il2CppInspector.Redux.CLI", "Il2CppInspector.Redux.CLI\Il2CppInspector.Redux.CLI.csproj", "{8FA27979-23F4-4A4E-8B69-503A20BF1344}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -88,6 +90,10 @@ Global
 		{D80D0FCE-4C9C-4BF1-8936-71DFB0B2D86A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D80D0FCE-4C9C-4BF1-8936-71DFB0B2D86A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D80D0FCE-4C9C-4BF1-8936-71DFB0B2D86A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8FA27979-23F4-4A4E-8B69-503A20BF1344}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8FA27979-23F4-4A4E-8B69-503A20BF1344}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8FA27979-23F4-4A4E-8B69-503A20BF1344}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8FA27979-23F4-4A4E-8B69-503A20BF1344}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

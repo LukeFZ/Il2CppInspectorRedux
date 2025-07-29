@@ -1,0 +1,23 @@
+{
+  "profiles": {
+    "WSL": {
+      "commandName": "WSL2",
+      "launchUrl": "http://localhost:5118/",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5118"
+      },
+      "distributionName": ""
+    },
+    "http": {
+      "commandName": "Project",
+      "commandLineArgs": "process -d --disassembler ghidra M:\\Downloads\\Reversing\\NotYetAnalyzedAPKs\\pokemon_friends\\libil2cpp.so M:\\Downloads\\Reversing\\NotYetAnalyzedAPKs\\pokemon_friends\\global-metadata.dat",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:5118"
+    }
+  },
+  "$schema": "https://json.schemastore.org/launchsettings.json"
+}
