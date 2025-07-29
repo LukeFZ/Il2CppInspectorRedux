@@ -1,6 +1,8 @@
-﻿namespace Il2CppInspector.Redux.GUI;
+﻿using System.Reflection;
 
-public static class DictionaryExtensions
+namespace Il2CppInspector.Redux.GUI;
+
+public static class Extensions
 {
     public static bool GetAsBooleanOrDefault(this Dictionary<string, string> dict, string key, bool defaultValue)
     {
@@ -18,4 +20,7 @@ public static class DictionaryExtensions
 
         return defaultValue;
     }
+
+    public static string? GetAssemblyVersion(this Assembly assembly)
+        => assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 }

@@ -4,21 +4,23 @@ namespace Il2CppInspector.Redux.GUI;
 
 internal class Il2CppHub : Hub
 {
-    public UiContext State
+    private const string ContextKey = "context";
+
+    private UiContext State
     {
         get
         {
-            if (!Context.Items.TryGetValue("context", out var context)
+            if (!Context.Items.TryGetValue(ContextKey, out var context)
                 || context is not UiContext ctx)
             {
-                Context.Items["context"] = ctx = new UiContext();
+                Context.Items[ContextKey] = ctx = new UiContext();
             }
 
             return ctx;
         }
     }
 
-    public UiClient Client => new(Clients.Caller);
+    private UiClient Client => new(Clients.Caller);
 
     public async Task OnUiLaunched()
     {

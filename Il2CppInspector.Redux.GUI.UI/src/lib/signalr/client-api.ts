@@ -45,6 +45,12 @@ export class SignalRClientApi {
         return this.registerHandler("OnImportCompleted", handler);
     }
 
+    onSetInspectorVersion(
+        handler: (version: string) => Promise<void>,
+    ): () => void {
+        return this.registerHandler("SetInspectorVersion", handler);
+    }
+
     private registerHandler(
         name: string,
         handler: (...args: any[]) => Promise<void>,

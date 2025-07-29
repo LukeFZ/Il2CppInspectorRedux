@@ -122,6 +122,7 @@ public class UiContext
     public async Task Initialize(UiClient client, CancellationToken cancellationToken = default)
     {
         await client.ShowSuccessToast("SignalR initialized!", cancellationToken);
+        await client.SetInspectorVersion(typeof(UiContext).Assembly.GetAssemblyVersion() ?? "<unknown>", cancellationToken);
     }
 
     public async Task LoadInputFiles(UiClient client, List<string> inputFiles,

@@ -16,7 +16,7 @@ class SignalRApi {
 }
 
 class SignalRState {
-    api = $state<SignalRApi | undefined>();
+    api = $state<SignalRApi>();
 
     get apiAvailable() {
         return this.api !== undefined;

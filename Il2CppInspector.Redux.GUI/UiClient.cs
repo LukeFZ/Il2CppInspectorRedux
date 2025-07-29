@@ -41,4 +41,7 @@ public class UiClient(ISingleClientProxy client)
 
     public async Task OnImportCompleted(CancellationToken cancellationToken = default)
         => await client.SendAsync(nameof(OnImportCompleted), cancellationToken);
+
+    public async Task SetInspectorVersion(string version, CancellationToken cancellationToken = default)
+        => await client.SendAsync(nameof(SetInspectorVersion), version, cancellationToken);
 }
