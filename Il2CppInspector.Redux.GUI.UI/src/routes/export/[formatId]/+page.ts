@@ -43,7 +43,7 @@ let mockFormatSettings: {
             {
                 type: "option",
                 name: {
-                    id: "flatten",
+                    id: "flattenhierarchy",
                     label: "Don't nest folders (flatten hierarchy)",
                 },
                 default: false,
@@ -55,7 +55,7 @@ let mockFormatSettings: {
             {
                 type: "combobox",
                 name: {
-                    id: "sorting",
+                    id: "sortingmode",
                     label: "Type sorting",
                 },
                 default: "alphabetical",
@@ -85,7 +85,7 @@ let mockFormatSettings: {
             {
                 type: "option",
                 name: {
-                    id: "compilable",
+                    id: "mustcompile",
                     label: "Attempt to generate output that compiles",
                 },
                 default: false,
@@ -117,7 +117,7 @@ let mockFormatSettings: {
             {
                 type: "filepath",
                 name: {
-                    id: "assembliespath",
+                    id: "unityassembliespath",
                     label: "Unity script assemblies path",
                 },
                 directoryPath: true,

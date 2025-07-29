@@ -7,28 +7,13 @@ public class CSharpStubOutput : IOutputFormatProvider
 {
     public static string Id => "cs";
 
-    private enum CSharpLayout
-    {
-        SingleFile,
-        Namespace,
-        Assembly,
-        Class,
-        Tree
-    }
-
-    private enum TypeSortingMode
-    {
-        Alphabetical,
-        TypeDefinitionIndex
-    }
-
     private class Settings(Dictionary<string, string> settings)
     {
         public readonly CSharpLayout Layout = settings.GetAsEnumOrDefault("layout", CSharpLayout.SingleFile);
-        public readonly bool FlattenHierarchy = settings.GetAsBooleanOrDefault("flatten", false);
-        public readonly TypeSortingMode SortingMode = settings.GetAsEnumOrDefault("sorting", TypeSortingMode.Alphabetical);
+        public readonly bool FlattenHierarchy = settings.GetAsBooleanOrDefault("flattenhierarchy", false);
+        public readonly TypeSortingMode SortingMode = settings.GetAsEnumOrDefault("sortingmode", TypeSortingMode.Alphabetical);
         public readonly bool SuppressMetadata = settings.GetAsBooleanOrDefault("suppressmetadata", false);
-        public readonly bool MustCompile = settings.GetAsBooleanOrDefault("compilable", false);
+        public readonly bool MustCompile = settings.GetAsBooleanOrDefault("mustcompile", false);
         public readonly bool SeperateAssemblyAttributes = settings.GetAsBooleanOrDefault("seperateassemblyattributes", true);
     }
 

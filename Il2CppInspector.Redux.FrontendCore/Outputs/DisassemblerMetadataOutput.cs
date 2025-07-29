@@ -9,14 +9,6 @@ public class DisassemblerMetadataOutput : IOutputFormatProvider
 {
     public static string Id => "disassemblermetadata";
 
-    private enum DisassemblerType
-    {
-        IDA,
-        Ghidra,
-        BinaryNinja,
-        None
-    }
-
     private class Settings(Dictionary<string, string> dict)
     {
         public readonly DisassemblerType Disassembler = dict.GetAsEnumOrDefault("disassembler", DisassemblerType.IDA);

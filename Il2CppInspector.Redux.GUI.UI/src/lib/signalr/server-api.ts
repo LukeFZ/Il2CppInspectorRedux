@@ -41,4 +41,8 @@ export class SignalRServerApi {
     async exportIl2CppFiles(targetDirectory: string) {
         return await this.connection.send("ExportIl2CppFiles", targetDirectory);
     }
+
+    async getInspectorVersion(): Promise<string> {
+        return await this.connection.invoke<string>("GetInspectorVersion");
+    }
 }

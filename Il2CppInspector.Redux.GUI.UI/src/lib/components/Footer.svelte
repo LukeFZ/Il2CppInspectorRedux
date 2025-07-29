@@ -6,14 +6,11 @@
     $effect(() => {
         if (signalRState.api === undefined) return;
 
-        const unregisterSetInspectorVersion =
-            signalRState.api.client.onSetInspectorVersion(async (version) => {
+        if (inspectorVersion === undefined) {
+            signalRState.api.server.getInspectorVersion().then((version) => {
                 inspectorVersion = version;
             });
-
-        return () => {
-            unregisterSetInspectorVersion();
-        };
+        }
     });
 </script>
 

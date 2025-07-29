@@ -47,10 +47,8 @@ public class UiContext
 
         try
         {
-            var file = FileFormatStream.Load(stream, _loadOptions, client.EventHandler);
-
-            if (file == null)
-                throw new InvalidOperationException("Failed to determine binary file format.");
+            var file = FileFormatStream.Load(stream, _loadOptions, client.EventHandler)
+                       ?? throw new InvalidOperationException("Failed to determine binary file format.");
 
             if (file.NumImages == 0)
                 throw new InvalidOperationException("Failed to find any binary images in the file");
@@ -122,7 +120,6 @@ public class UiContext
     public async Task Initialize(UiClient client, CancellationToken cancellationToken = default)
     {
         await client.ShowSuccessToast("SignalR initialized!", cancellationToken);
-        await client.SetInspectorVersion(typeof(UiContext).Assembly.GetAssemblyVersion() ?? "<unknown>", cancellationToken);
     }
 
     public async Task LoadInputFiles(UiClient client, List<string> inputFiles,
@@ -200,16 +197,16 @@ public class UiContext
         {
             var model = _appModels[0];
 
-            foreach (var queuedExport in _queuedExports)
+            foreach (var (formatId, outputDirectory, settings) in _queuedExports)
             {
                 try
                 {
-                    var outputFormat = OutputFormatRegistry.GetOutputFormat(queuedExport.FormatId);
-                    await outputFormat.Export(model, client, queuedExport.OutputDirectory, queuedExport.Settings);
+                    var outputFormat = OutputFormatRegistry.GetOutputFormat(formatId);
+                    await outputFormat.Export(model, client, outputDirectory, settings);
                 }
                 catch (Exception ex)
                 {
-                    await client.ShowErrorToast($"Export for format {queuedExport.FormatId} failed: {ex}",
+                    await client.ShowErrorToast($"Export for format {formatId} failed: {ex}",
                         cancellationToken);
                 }
             }
@@ -245,5 +242,10 @@ public class UiContext
                 await client.ShowSuccessToast("Successfully extracted IL2CPP files.", cancellationToken);
             }, cancellationToken);
         }
+    }
+
+    public static Task<string> GetInspectorVersion()
+    {
+        return Task.FromResult(typeof(UiContext).Assembly.GetAssemblyVersion() ?? "<unknown>");
     }
 }

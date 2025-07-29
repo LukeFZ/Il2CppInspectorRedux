@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Il2CppInspector.Redux.FrontendCore;
 
-internal class Il2CppHub : Hub
+public class Il2CppHub : Hub
 {
     private const string ContextKey = "context";
 
@@ -50,5 +50,9 @@ internal class Il2CppHub : Hub
     public async Task ExportIl2CppFiles(string outputDirectory)
     {
         await State.ExportIl2CppFiles(Client, outputDirectory);
+    }
+    public async Task<string> GetInspectorVersion()
+    {
+        return await UiContext.GetInspectorVersion();
     }
 }
