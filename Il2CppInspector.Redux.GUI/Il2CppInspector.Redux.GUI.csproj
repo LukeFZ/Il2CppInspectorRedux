@@ -13,6 +13,7 @@
 
     <!-- todo: this needs to be adjusted for multiplatform support -->
     <Target Name="BuildTauriFrontend" BeforeTargets="BeforeBuild" Condition="'$(Configuration)' == 'Release'">
+        <Exec Command="pnpm install" WorkingDirectory="..\Il2CppInspector.Redux.GUI.UI" Condition="!Exists('..\Il2CppInspector.Redux.GUI.UI\node_modules')" />
         <Exec Command="pnpm tauri build --no-bundle" WorkingDirectory="..\Il2CppInspector.Redux.GUI.UI" />
         <ItemGroup>
             <EmbeddedResource Include="..\Il2CppInspector.Redux.GUI.UI\src-tauri\target\release\il2cppinspectorredux.exe" />
