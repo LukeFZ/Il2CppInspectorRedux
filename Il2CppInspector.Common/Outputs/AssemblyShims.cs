@@ -235,7 +235,8 @@ namespace Il2CppInspector.Outputs
         private TypeDefUser CreateTypeShallow(ModuleDef module, TypeInfo type)
         {
             // Initialize with base class
-            var mType = new TypeDefUser(type.Namespace, type.BaseName, GetTypeRef(module, type.BaseType))
+            string ns = type.IsNested ? null : type.Namespace;
+            var mType = new TypeDefUser(ns, type.BaseName, GetTypeRef(module, type.BaseType))
             {
                 Attributes = (TypeAttributes)type.Attributes
             };
@@ -639,8 +640,10 @@ namespace Il2CppInspector.Outputs
             var typeOwnerModule = modules[type.Assembly];
             var typeOwnerModuleRef = new ModuleRefUser(typeOwnerModule);
 
+            //Keep the same as TypeDef
+            string ns = type.IsNested ? null : type.Namespace;
             // Get reference to type; use nested type as resolution scope if applicable
-            var typeSig = new TypeRefUser(typeOwnerModule, type.Namespace, type.BaseName,
+            var typeSig = new TypeRefUser(typeOwnerModule, ns, type.BaseName,
                 type.DeclaringType != null? (IResolutionScope) GetTypeRef(module, type.DeclaringType).ScopeType : typeOwnerModuleRef)
                 .ToTypeSig();
 
