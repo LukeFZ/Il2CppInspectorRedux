@@ -211,6 +211,11 @@ public class UiContext
             {
                 try
                 {
+                    if (!Directory.Exists(outputDirectory))
+                    {
+                        Directory.CreateDirectory(outputDirectory);
+                    }
+
                     var outputFormat = OutputFormatRegistry.GetOutputFormat(formatId);
                     await outputFormat.Export(model, client, outputDirectory, settings);
                 }
