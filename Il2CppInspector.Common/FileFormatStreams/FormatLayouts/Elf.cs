@@ -106,6 +106,9 @@ namespace Il2CppInspector
         R_386_GLOB_DAT = 6,
         R_386_JMP_SLOT = 7,
 
+        R_X86_64_RELATIVE = 8,
+        R_X86_64_RELATIVE64 = 38,
+
         R_AMD64_64 = 1
     }
 

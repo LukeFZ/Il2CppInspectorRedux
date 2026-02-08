@@ -354,6 +354,10 @@ namespace Il2CppInspector
 
                     (Elf.R_AMD64_64, Elf.EM_AARCH64) => (conv.Add(symValue, addend), true), // S + A
 
+                    (Elf.R_AMD64_64, Elf.EM_X86_64) => (conv.Add(symValue, addend), true), // S + A
+                    (Elf.R_X86_64_RELATIVE, Elf.EM_X86_64) => (addend, true),  // S + A
+                    (Elf.R_X86_64_RELATIVE64, Elf.EM_X86_64) => (addend, true),  // S + A
+
                     _ => (default(TWord), false)
                 };
 
