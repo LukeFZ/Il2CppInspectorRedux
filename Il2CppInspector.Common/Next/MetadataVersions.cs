@@ -48,4 +48,9 @@ public static class MetadataVersions
     // Unity 6000.5.0a5
     public static readonly StructVersion V1050 = new(105);
     // NOTE: This version additionally uses a tag to specify the size of MethodIndex.
+
+    // Unity 6000.5.0a6
+    public static readonly StructVersion V1060 = new(106);
+    // NOTE: This version additionally uses tags to specify the size of GenericParameterIndex, FieldIndex, DefaultValueDataIndex,
+    // alongside changing TypeArgc to a ushort and IsMethod to a byte in Il2CppGenericContainer.
 }

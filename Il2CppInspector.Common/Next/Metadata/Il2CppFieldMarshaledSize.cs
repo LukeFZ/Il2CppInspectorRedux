@@ -1,7 +1,6 @@
 ﻿namespace Il2CppInspector.Next.Metadata;
 
 using VersionedSerialization.Attributes;
-using FieldIndex = int;
 
 [VersionedStruct]
 public partial record struct Il2CppFieldMarshaledSize

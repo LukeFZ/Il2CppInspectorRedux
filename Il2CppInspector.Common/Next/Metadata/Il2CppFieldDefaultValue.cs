@@ -2,9 +2,6 @@
 
 namespace Il2CppInspector.Next.Metadata;
 
-using FieldIndex = int;
-using DefaultValueDataIndex = int;
-
 [VersionedStruct]
 public partial record struct Il2CppFieldDefaultValue
 {

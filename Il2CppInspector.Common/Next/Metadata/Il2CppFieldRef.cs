@@ -2,8 +2,6 @@
 
 namespace Il2CppInspector.Next.Metadata;
 
-using FieldIndex = int;
-
 [VersionedStruct]
 public partial record struct Il2CppFieldRef
 {

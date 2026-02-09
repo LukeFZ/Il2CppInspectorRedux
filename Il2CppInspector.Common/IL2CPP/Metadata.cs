@@ -134,15 +134,15 @@ namespace Il2CppInspector
                 // as we do not have it available at this point.
                 // thankfully, we can just guess the size based off the three available options and the known total size of
                 // a type entry that uses TypeIndex.
-                var expectedEventDefinitionSize = Header.Events.SectionSize / Header.Events.Count;
-                var maxEventDefinitionSize = Il2CppEventDefinition.Size(tempVersion);
+                var actualSize = Header.InterfaceOffsets.SectionSize / Header.InterfaceOffsets.Count;
+                var maxSize = Il2CppEventDefinition.Size(tempVersion);
 
                 int typeIndexSize;
-                if (expectedEventDefinitionSize == maxEventDefinitionSize)
+                if (actualSize == maxSize)
                     typeIndexSize = sizeof(int);
-                else if (expectedEventDefinitionSize == maxEventDefinitionSize - 2)
+                else if (actualSize == maxSize - 2)
                     typeIndexSize = sizeof(ushort);
-                else if (expectedEventDefinitionSize == maxEventDefinitionSize - 3)
+                else if (actualSize == maxSize - 3)
                     typeIndexSize = sizeof(byte);
                 else
                     throw new InvalidOperationException("Could not determine TypeIndex size based on the metadata header");
@@ -171,6 +171,16 @@ namespace Il2CppInspector
                 {
                     var methodIndexSize = GetIndexSize(Header.Methods.Count);
                     fullTag += $"_{MethodIndex.TagPrefix}{methodIndexSize}";
+                }
+
+                if (Version >= MetadataVersions.V1060)
+                {
+                    var genericParameterIndexSize = GetIndexSize(Header.GenericParameters.Count);
+                    var fieldIndexSize = GetIndexSize(Header.Fields.Count);
+                    var defaultValueDataIndex = GetIndexSize(Header.FieldAndParameterDefaultValueData.Count);
+                    fullTag += $"_{GenericParameterIndex.TagPrefix}{genericParameterIndexSize}"
+                        + $"_{FieldIndex.TagPrefix}{fieldIndexSize}"
+                        + $"_{DefaultValueDataIndex.TagPrefix}{defaultValueDataIndex}";
                 }
 
                 Version = new StructVersion(Version.Major, Version.Minor, fullTag);
