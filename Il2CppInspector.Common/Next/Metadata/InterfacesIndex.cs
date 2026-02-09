@@ -6,8 +6,7 @@ public struct InterfacesIndex(int value) : IIndexType<InterfacesIndex>, IReadabl
 {
     public const string TagPrefix = nameof(InterfacesIndex);
 
-    static string IIndexType<InterfacesIndex>.TagPrefix => TagPrefix; 
-    static StructVersion IIndexType<InterfacesIndex>.AddedVersion => MetadataVersions.V390;
+    static string IIndexType<InterfacesIndex>.TagPrefix => TagPrefix;
 
     private int _value = value;
 

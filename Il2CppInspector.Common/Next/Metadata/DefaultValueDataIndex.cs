@@ -7,7 +7,6 @@ public struct DefaultValueDataIndex(int value) : IIndexType<DefaultValueDataInde
     public const string TagPrefix = nameof(DefaultValueDataIndex);
 
     static string IIndexType<DefaultValueDataIndex>.TagPrefix => TagPrefix;
-    static StructVersion IIndexType<DefaultValueDataIndex>.AddedVersion => MetadataVersions.V390;
 
     private int _value = value;
 

@@ -7,7 +7,6 @@ public struct TypeIndex(int value) : IIndexType<TypeIndex>, IReadable, IEquatabl
     public const string TagPrefix = nameof(TypeIndex);
 
     static string IIndexType<TypeIndex>.TagPrefix => TagPrefix;
-    static StructVersion IIndexType<TypeIndex>.AddedVersion => MetadataVersions.V390;
 
     private int _value = value;
 

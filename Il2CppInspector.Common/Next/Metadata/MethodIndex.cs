@@ -7,7 +7,6 @@ public struct MethodIndex(int value) : IIndexType<MethodIndex>, IReadable, IEqua
     public const string TagPrefix = nameof(MethodIndex);
 
     static string IIndexType<MethodIndex>.TagPrefix => TagPrefix;
-    static StructVersion IIndexType<MethodIndex>.AddedVersion => MetadataVersions.V390;
 
     private int _value = value;
 

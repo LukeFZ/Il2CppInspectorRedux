@@ -6,8 +6,7 @@ public struct PropertyIndex(int value) : IIndexType<PropertyIndex>, IReadable, I
 {
     public const string TagPrefix = nameof(PropertyIndex);
 
-    static string IIndexType<PropertyIndex>.TagPrefix => TagPrefix; 
-    static StructVersion IIndexType<PropertyIndex>.AddedVersion => MetadataVersions.V390;
+    static string IIndexType<PropertyIndex>.TagPrefix => TagPrefix;
 
     private int _value = value;
 

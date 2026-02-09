@@ -6,8 +6,7 @@ public struct EventIndex(int value) : IIndexType<EventIndex>, IReadable, IEquata
 {
     public const string TagPrefix = nameof(EventIndex);
 
-    static string IIndexType<EventIndex>.TagPrefix => TagPrefix; 
-    static StructVersion IIndexType<EventIndex>.AddedVersion => MetadataVersions.V390;
+    static string IIndexType<EventIndex>.TagPrefix => TagPrefix;
 
     private int _value = value;
 

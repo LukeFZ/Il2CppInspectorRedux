@@ -6,8 +6,7 @@ public struct ParameterIndex(int value) : IIndexType<ParameterIndex>, IReadable,
 {
     public const string TagPrefix = nameof(ParameterIndex);
 
-    static string IIndexType<ParameterIndex>.TagPrefix => TagPrefix; 
-    static StructVersion IIndexType<ParameterIndex>.AddedVersion => MetadataVersions.V390;
+    static string IIndexType<ParameterIndex>.TagPrefix => TagPrefix;
 
     private int _value = value;
 

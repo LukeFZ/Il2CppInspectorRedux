@@ -7,7 +7,6 @@ public struct FieldIndex(int value) : IIndexType<FieldIndex>, IReadable, IEquata
     public const string TagPrefix = nameof(FieldIndex);
 
     static string IIndexType<FieldIndex>.TagPrefix => TagPrefix;
-    static StructVersion IIndexType<FieldIndex>.AddedVersion => MetadataVersions.V390;
 
     private int _value = value;
 

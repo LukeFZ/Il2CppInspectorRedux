@@ -7,7 +7,6 @@ public struct GenericContainerIndex(int value) : IIndexType<GenericContainerInde
     public const string TagPrefix = nameof(GenericContainerIndex);
 
     static string IIndexType<GenericContainerIndex>.TagPrefix => TagPrefix;
-    static StructVersion IIndexType<GenericContainerIndex>.AddedVersion => MetadataVersions.V390;
 
     private int _value = value;
 

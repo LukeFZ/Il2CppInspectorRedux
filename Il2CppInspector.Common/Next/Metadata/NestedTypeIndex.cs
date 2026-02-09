@@ -6,8 +6,7 @@ public struct NestedTypeIndex(int value) : IIndexType<NestedTypeIndex>, IReadabl
 {
     public const string TagPrefix = nameof(NestedTypeIndex);
 
-    static string IIndexType<NestedTypeIndex>.TagPrefix => TagPrefix; 
-    static StructVersion IIndexType<NestedTypeIndex>.AddedVersion => MetadataVersions.V390;
+    static string IIndexType<NestedTypeIndex>.TagPrefix => TagPrefix;
 
     private int _value = value;
 

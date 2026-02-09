@@ -7,7 +7,6 @@ public struct GenericParameterIndex(int value) : IIndexType<GenericParameterInde
     public const string TagPrefix = nameof(GenericParameterIndex);
 
     static string IIndexType<GenericParameterIndex>.TagPrefix => TagPrefix;
-    static StructVersion IIndexType<GenericParameterIndex>.AddedVersion => MetadataVersions.V390;
 
     private int _value = value;
 

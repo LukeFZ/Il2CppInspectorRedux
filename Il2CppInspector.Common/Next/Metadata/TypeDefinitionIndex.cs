@@ -7,7 +7,6 @@ public struct TypeDefinitionIndex(int value) : IIndexType<TypeDefinitionIndex>, 
     public const string TagPrefix = nameof(TypeDefinitionIndex);
 
     static string IIndexType<TypeDefinitionIndex>.TagPrefix => TagPrefix;
-    static StructVersion IIndexType<TypeDefinitionIndex>.AddedVersion => MetadataVersions.V390;
 
     private int _value = value;
 

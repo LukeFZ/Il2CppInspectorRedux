@@ -6,17 +6,15 @@ public interface IIndexType<T> where T
     : IIndexType<T>, allows ref struct
 {
     public static abstract string TagPrefix { get; }
-    public static abstract StructVersion AddedVersion { get; }
 
     private static string TagSize4 => $"{T.TagPrefix}4";
     private static string TagSize2 => $"{T.TagPrefix}2";
     private static string TagSize1 => $"{T.TagPrefix}1";
 
     private static bool HasCustomSize(in StructVersion version)
-        => version >= T.AddedVersion
-           && version.Tag != null
-           && version.Tag.Contains(T.TagPrefix)
-           && !version.Tag.Contains(TagSize4);
+        => version.Tag != null
+           && (version.Tag.Contains(TagSize2)
+               || version.Tag.Contains(TagSize1));
 
     public static int IndexSize(in StructVersion version = default, bool is32Bit = false)
     {
