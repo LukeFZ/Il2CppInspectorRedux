@@ -26,7 +26,7 @@ public partial record struct Il2CppGenericContainer
     [field: FieldOffset(4)]
     private ushort _newTypeArgc;
 
-    [VersionCondition(LessThan = "106.0")] 
+    [VersionCondition(GreaterThan = "106.0")] 
     [field: FieldOffset(8)]
     public byte _newIsMethod;
 }

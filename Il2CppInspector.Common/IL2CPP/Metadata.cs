@@ -414,17 +414,25 @@ namespace Il2CppInspector
         public ImmutableArray<T> ReadMetadataPrimitiveArray<T>(int oldOffset, int oldSize, Il2CppSectionMetadata newMetadata)
             where T : unmanaged
         {
-            return Version >= MetadataVersions.V380
-                ? ReadPrimitiveArray<T>(newMetadata.Offset, newMetadata.Count)
-                : ReadPrimitiveArray<T>(oldOffset, oldSize / Unsafe.SizeOf<T>());
+            if (Version >= MetadataVersions.V380)
+            {
+                Debug.Assert(newMetadata.Count * Unsafe.SizeOf<T>() == newMetadata.SectionSize);
+                return ReadPrimitiveArray<T>(newMetadata.Offset, newMetadata.Count);
+            }
+
+            return ReadPrimitiveArray<T>(oldOffset, oldSize / Unsafe.SizeOf<T>());
         }
 
         public ImmutableArray<T> ReadMetadataArray<T>(int oldOffset, int oldSize, Il2CppSectionMetadata newMetadata)
             where T : IReadable, new()
         {
-            return Version >= MetadataVersions.V380
-                ? ReadVersionedObjectArray<T>(newMetadata.Offset, newMetadata.Count)
-                : ReadVersionedObjectArray<T>(oldOffset, oldSize / Sizeof<T>());
+            if (Version >= MetadataVersions.V380)
+            {
+                Debug.Assert(newMetadata.Count * Sizeof<T>() == newMetadata.SectionSize);
+                return ReadVersionedObjectArray<T>(newMetadata.Offset, newMetadata.Count);
+            }
+
+            return ReadVersionedObjectArray<T>(oldOffset, oldSize / Sizeof<T>());
         }
 
         // Save metadata to file, overwriting if necessary
