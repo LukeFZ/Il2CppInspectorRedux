@@ -717,7 +717,13 @@ namespace Il2CppInspector.Reflection
         public bool IsSerializable => (Attributes & TypeAttributes.Serializable) == TypeAttributes.Serializable;
 #pragma warning restore SYSLIB0050
         public bool IsSpecialName => (Attributes & TypeAttributes.SpecialName) == TypeAttributes.SpecialName;
-        public bool IsValueType => BaseType?.FullName == "System.ValueType";
+        
+        // L-NOTE: This must not check BaseType, as this is not what dictates whether
+        // a type is considered a "ValueType". System.Enum inherits from ValueType
+        // but is considered (and treated as) a class everywhere, which would not be caught
+        // by the aforementioned check
+        public bool IsValueType => genericTypeDefinition?.IsValueType 
+                                   ?? Definition.Bitfield.ValueType;
 
         // Helper function for determining if using this type as a field, parameter etc. requires that field or method to be declared as unsafe
         public bool RequiresUnsafeContext => IsPointer || (HasElementType && ElementType.RequiresUnsafeContext);
