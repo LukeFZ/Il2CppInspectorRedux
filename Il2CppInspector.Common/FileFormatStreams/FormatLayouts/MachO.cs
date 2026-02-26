@@ -61,7 +61,16 @@ namespace Il2CppInspector
         N_FNAME = 0x22,
         N_FUN   = 0x24,
         N_STSYM = 0x26,
+        N_LCSYM = 0x28,
+        N_MAIN  = 0x2A,
+        N_ROSYM = 0x2C,
         N_BNSYM = 0x2E,
+        N_PC    = 0x30,
+        N_NSYMS = 0x32,
+        N_NOMAP = 0x34,
+        N_OBJ   = 0x38,
+        N_OPT   = 0x3C,
+        N_RSYM  = 0x40,
         N_ENSYM = 0x4E,
         N_SO    = 0x64,
         N_OSO   = 0x66,
@@ -185,6 +194,13 @@ namespace Il2CppInspector
         public uint ImportsCount;
         public uint ImportsFormat;
         public uint SymbolsFormat;
+    }
+
+    public enum MachODyldChainedImportFormat : uint
+    {
+        DYLD_CHAINED_IMPORT = 1,
+        DYLD_CHAINED_IMPORT_ADDEND = 2,
+        DYLD_CHAINED_IMPORT_ADDEND64 = 3
     }
 
     [VersionedStruct]
