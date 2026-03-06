@@ -4,13 +4,10 @@
     All rights reserved.
 */
 
-using System;
-using System.Buffers;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Il2CppInspector.Next;
 using Il2CppInspector.Next.BinaryMetadata;
+using System.Buffers;
+using System.Text;
 using VersionedSerialization;
 
 namespace Il2CppInspector
@@ -19,7 +16,7 @@ namespace Il2CppInspector
     {
         // Boyer-Moore-Horspool
         public IEnumerable<uint> FindAllBytes(byte[] blob, byte[] signature, uint requiredAlignment = 1)
-        { 
+        {
             var badBytes = ArrayPool<uint>.Shared.Rent(256);
 
             var signatureLength = (uint) signature.Length;
@@ -79,7 +76,8 @@ namespace Il2CppInspector
             };
 
         // Find all valid virtual address pointers to a virtual address
-        private IEnumerable<ulong> FindAllMappedWords(byte[] blob, ulong va) {
+        private IEnumerable<ulong> FindAllMappedWords(byte[] blob, ulong va)
+        {
             var fileOffsets = FindAllWords(blob, va);
             foreach (var offset in fileOffsets)
                 if (Image.TryMapFileOffsetToVA(offset, out va))
@@ -90,7 +88,8 @@ namespace Il2CppInspector
         private IEnumerable<ulong> FindAllMappedWords(byte[] blob, IEnumerable<ulong> va) => va.SelectMany(a => FindAllMappedWords(blob, a));
 
         // Find all valid pointer chains to a set of virtual addresses with the specified number of indirections
-        private IEnumerable<ulong> FindAllPointerChains(byte[] blob, ulong va, int indirections) {
+        private IEnumerable<ulong> FindAllPointerChains(byte[] blob, ulong va, int indirections)
+        {
             foreach (var vas in FindAllMappedWords(blob, va))
             {
                 if (indirections == 1)
@@ -117,7 +116,11 @@ namespace Il2CppInspector
             Image.Position = 0;
             var imageBytes = Image.ReadBytes((int) Image.Length);
 
-            var ptrSize = (uint) Image.Bits / 8;
+            var ptrSize = (uint)Image.Bits / 8;
+            var methodPointersCount = metadata.Methods.Count(m => (uint)m.MethodIndex != 0xffff_ffff);
+            var metadataUsageCount = metadata.Version < MetadataVersions.V270 && metadata.MetadataUsagePairs.Length > 0
+                ? (int)metadata.MetadataUsagePairs.Max(x => x.DestinationIndex) + 1
+                : 0;
             ulong codeRegistration = 0;
             IEnumerable<ulong> vas;
 
@@ -148,6 +151,9 @@ namespace Il2CppInspector
                                                  potentialCodeGenModules - (ulong) i * ptrSize, 1))
                                     {
                                         var expectedImageCountPtr = potentialCodeRegistrationPtr - ptrSize;
+                                        if (!Image.TryMapVATR(expectedImageCountPtr, out _))
+                                            continue;
+
                                         var expectedImageCount = Image.ReadMappedWord(expectedImageCountPtr);
                                         if (expectedImageCount == imagesCount)
                                             return potentialCodeRegistrationPtr;
@@ -202,55 +208,63 @@ namespace Il2CppInspector
 
                 var codeRegVa = FindCodeRegistration();
 
-                if (codeRegVa == 0)
-                    return (0, 0);
-
-
-                var codeGenEndPtr = codeRegVa + ptrSize;
-                // pCodeGenModules is the last field in CodeRegistration so we subtract the size of one pointer from the struct size
-                codeRegistration = codeGenEndPtr - (ulong)Il2CppCodeRegistration.Size(Image.Version, Image.Bits == 32);
-
-                // In v24.3, windowsRuntimeFactoryTable collides with codeGenModules. So far no samples have had windowsRuntimeFactoryCount > 0;
-                // if this changes we'll have to get smarter about disambiguating these two.
-                var cr = Image.ReadMappedVersionedObject<Il2CppCodeRegistration>(codeRegistration);
-
-                if (Image.Version == MetadataVersions.V242 && cr.InteropDataCount == 0) {
-                    Image.Version = MetadataVersions.V243;
-                    codeRegistration = codeGenEndPtr - (ulong)Il2CppCodeRegistration.Size(Image.Version, Image.Bits == 32);
-                }
-
-                if (Image.Version == MetadataVersions.V270 && cr.ReversePInvokeWrapperCount > 0x30000)
+                if (codeRegVa != 0)
                 {
-                    // If reversePInvokeWrapperCount is a pointer, then it's because we're actually on 27.1 and there's a genericAdjustorThunks pointer interfering.
-                    // We need to bump version to 27.1 and back up one more pointer.
-                    Image.Version = MetadataVersions.V271;
-                    codeRegistration = codeGenEndPtr - (ulong)Il2CppCodeRegistration.Size(Image.Version, Image.Bits == 32);
-                    cr = Image.ReadMappedVersionedObject<Il2CppCodeRegistration>(codeRegistration);
-                }
+                    try
+                    {
+                        var codeGenEndPtr = codeRegVa + ptrSize;
+                        // pCodeGenModules is the last field in CodeRegistration so we subtract the size of one pointer from the struct size
+                        codeRegistration = codeGenEndPtr - (ulong)Il2CppCodeRegistration.Size(Image.Version, Image.Bits == 32);
 
-                // genericAdjustorThunks was inserted before invokerPointersCount in 24.5 and 27.1
-                // pointer expected if we need to bump version
-                if (Image.Version == MetadataVersions.V244 && 
-                    (cr.InvokerPointersCount > 0x50000 || cr.ReversePInvokeWrapperCount > cr.ReversePInvokeWrappers))
-                {
-                    Image.Version = MetadataVersions.V245;
-                    codeRegistration = codeGenEndPtr - (ulong)Il2CppCodeRegistration.Size(Image.Version, Image.Bits == 32);
-                    cr = Image.ReadMappedVersionedObject<Il2CppCodeRegistration>(codeRegistration);
-                }
+                        // In v24.3, windowsRuntimeFactoryTable collides with codeGenModules. So far no samples have had windowsRuntimeFactoryCount > 0;
+                        // if this changes we'll have to get smarter about disambiguating these two.
+                        var cr = Image.ReadMappedVersionedObject<Il2CppCodeRegistration>(codeRegistration);
 
-                if ((Image.Version == MetadataVersions.V290 || Image.Version == MetadataVersions.V310) &&
-                    cr.GenericMethodPointersCount >= cr.GenericMethodPointers)
-                {
-                    Image.Version = new StructVersion(Image.Version.Major, 0, MetadataVersions.Tag2022);
-                    codeRegistration = codeGenEndPtr - (ulong)Il2CppCodeRegistration.Size(Image.Version, Image.Bits == 32);
+                        if (Image.Version == MetadataVersions.V242 && cr.InteropDataCount == 0)
+                        {
+                            Image.Version = MetadataVersions.V243;
+                            codeRegistration = codeGenEndPtr - (ulong)Il2CppCodeRegistration.Size(Image.Version, Image.Bits == 32);
+                        }
+
+                        if (Image.Version == MetadataVersions.V270 && cr.ReversePInvokeWrapperCount > 0x30000)
+                        {
+                            // If reversePInvokeWrapperCount is a pointer, then it's because we're actually on 27.1 and there's a genericAdjustorThunks pointer interfering.
+                            // We need to bump version to 27.1 and back up one more pointer.
+                            Image.Version = MetadataVersions.V271;
+                            codeRegistration = codeGenEndPtr - (ulong)Il2CppCodeRegistration.Size(Image.Version, Image.Bits == 32);
+                            cr = Image.ReadMappedVersionedObject<Il2CppCodeRegistration>(codeRegistration);
+                        }
+
+                        // genericAdjustorThunks was inserted before invokerPointersCount in 24.5 and 27.1
+                        // pointer expected if we need to bump version
+                        if (Image.Version == MetadataVersions.V244 &&
+                            (cr.InvokerPointersCount > 0x50000 || cr.ReversePInvokeWrapperCount > cr.ReversePInvokeWrappers))
+                        {
+                            Image.Version = MetadataVersions.V245;
+                            codeRegistration = codeGenEndPtr - (ulong)Il2CppCodeRegistration.Size(Image.Version, Image.Bits == 32);
+                            cr = Image.ReadMappedVersionedObject<Il2CppCodeRegistration>(codeRegistration);
+                        }
+
+                        if ((Image.Version == MetadataVersions.V290 || Image.Version == MetadataVersions.V310) &&
+                            cr.GenericMethodPointersCount >= cr.GenericMethodPointers)
+                        {
+                            Image.Version = new StructVersion(Image.Version.Major, 0, MetadataVersions.Tag2022);
+                            codeRegistration = codeGenEndPtr - (ulong)Il2CppCodeRegistration.Size(Image.Version, Image.Bits == 32);
+                        }
+                    }
+                    catch
+                    {
+                        codeRegistration = 0;
+                    }
                 }
             }
 
             // Find CodeRegistration
             // <= 24.1
-            else {
+            else
+            {
                 // The first item in CodeRegistration is the total number of method pointers
-                vas = FindAllMappedWords(imageBytes, (ulong) metadata.Methods.Count(m => (uint) m.MethodIndex != 0xffff_ffff));
+                vas = FindAllMappedWords(imageBytes, (ulong)methodPointersCount);
 
                 // The count of method pointers will be followed some bytes later by
                 // the count of custom attribute generators; the distance between them
@@ -262,8 +276,6 @@ namespace Il2CppInspector
                         codeRegistration = va;
                 }
 
-                if (codeRegistration == 0)
-                    return (0, 0);
             }
 
             // Find MetadataRegistration
@@ -273,7 +285,7 @@ namespace Il2CppInspector
             // Find TypeDefinitionsSizesCount (4th last field) then work back to the start of the struct
             // This saves us from guessing where metadataUsagesCount is later
             var mrSize = (ulong)Il2CppMetadataRegistration.Size(Image.Version, Image.Bits == 32);
-            var typesLength = (ulong) metadata.Types.Length;
+            var typesLength = (ulong)metadata.Types.Length;
 
             vas = FindAllMappedWords(imageBytes, typesLength).Select(a => a - mrSize + ptrSize * 4);
 
@@ -290,19 +302,292 @@ namespace Il2CppInspector
             {
                 foreach (var va in vas)
                 {
-                    var mr = Image.ReadMappedVersionedObject<Il2CppMetadataRegistration>(va);
-                    if (mr.TypeDefinitionsSizesCount == metadata.Types.Length
-                        && mr.FieldOffsetsCount == metadata.Types.Length
-                        && mr is { GenericInstsCount: > 0, GenericClassesCount: > 0 })
+                    try
                     {
-                        metadataRegistration = va;
-                        break;
+                        var mr = Image.ReadMappedVersionedObject<Il2CppMetadataRegistration>(va);
+                        if (mr.TypeDefinitionsSizesCount == metadata.Types.Length
+                            && mr.FieldOffsetsCount == metadata.Types.Length
+                            && mr is { GenericInstsCount: > 0, GenericClassesCount: > 0 })
+                        {
+                            metadataRegistration = va;
+                            break;
+                        }
+                    }
+                    catch
+                    {
+                        // ignored
                     }
                 }
             }
 
-            if (metadataRegistration == 0)
-                return (0, 0);
+            if (codeRegistration == 0 || metadataRegistration == 0)
+            {
+                if (!Image.TryGetSections(out var sectionList))
+                    return (0, 0);
+
+                var sections = sectionList.ToList();
+                var exec = sections.Where(x => x.IsExec).ToList();
+                var data = sections.Where(x => x.IsData && !x.IsBSS).ToList();
+                var bss = sections.Where(x => x.IsBSS).ToList();
+
+                if (Image is NsoReader)
+                {
+                    data = data
+                        .OrderByDescending(x => string.Equals(x.Name, "data", StringComparison.OrdinalIgnoreCase))
+                        .ThenByDescending(x => string.Equals(x.Name, "rodata", StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                }
+
+                if (!exec.Any() || !data.Any())
+                    return (0, 0);
+
+                var pointerInExec = false;
+                var sectionCodeRegistrationNeedsNormalization = false;
+
+                ulong ReadPointer()
+                    => Image.Bits == 32 ? Image.ReadUInt32() : Image.ReadUInt64();
+
+                bool CheckFileOffsetInSections(ulong fileOffset, List<Section> candidates)
+                    => candidates.Any(x => fileOffset >= x.ImageStart && fileOffset <= x.ImageEnd);
+
+                bool CheckVirtualAddressInSections(IEnumerable<ulong> addresses, List<Section> candidates)
+                    => addresses.All(address => candidates.Any(x => address >= x.VirtualStart && address <= x.VirtualEnd));
+
+                IEnumerable<ulong> FindReferences(ulong value)
+                {
+                    foreach (var section in data)
+                    {
+                        var end = Math.Min((long)section.ImageEnd + 1, Image.Length) - ptrSize;
+                        for (var position = (long)section.ImageStart; position <= end; position += ptrSize)
+                        {
+                            Image.Position = position;
+                            if (ReadPointer() == value)
+                                yield return section.VirtualStart + (ulong)(position - section.ImageStart);
+                        }
+                    }
+                }
+
+                ulong FindCodeRegistration(List<Section> searchSections)
+                {
+                    if (metadata.Version < MetadataVersions.V242)
+                    {
+                        foreach (var section in data)
+                        {
+                            var end = Math.Min((long)section.ImageEnd + 1, Image.Length) - ptrSize;
+                            for (var position = (long)section.ImageStart; position <= end; position += ptrSize)
+                            {
+                                Image.Position = position;
+                                if (Image.ReadWord() != methodPointersCount)
+                                    continue;
+
+                                try
+                                {
+                                    var listPointer = Image.MapVATR(ReadPointer());
+                                    if (!CheckFileOffsetInSections(listPointer, data))
+                                        continue;
+
+                                    var pointers = Image.ReadArray<ulong>((long)listPointer, methodPointersCount);
+                                    if (CheckVirtualAddressInSections(pointers, exec))
+                                        return Image.MapFileOffsetToVA((uint)position);
+                                }
+                                catch
+                                {
+                                    // ignored
+                                }
+                            }
+                        }
+
+                        return 0;
+                    }
+
+                    foreach (var section in searchSections)
+                    {
+                        Image.Position = section.ImageStart;
+                        var sectionBytes = Image.ReadBytes((int)(section.ImageEnd - section.ImageStart + 1));
+
+                        foreach (var index in FindAllStrings(sectionBytes.ToArray(), "mscorlib.dll\0"))
+                        {
+                            var dllVa = section.VirtualStart + index;
+
+                            foreach (var refVa in FindReferences(dllVa))
+                            {
+                                foreach (var refVa2 in FindReferences(refVa))
+                                {
+                                    if (metadata.Version >= MetadataVersions.V270)
+                                    {
+                                        for (var i = metadata.Images.Length - 1; i >= 0; i--)
+                                        {
+                                            foreach (var refVa3 in FindReferences(refVa2 - (ulong)i * ptrSize))
+                                            {
+                                                var imageCountPointer = refVa3 - ptrSize;
+                                                if (!Image.TryMapVATR(imageCountPointer, out _))
+                                                    continue;
+
+                                                if (Image.ReadMappedWord(imageCountPointer) != metadata.Images.Length)
+                                                    continue;
+
+                                                return refVa3;
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        for (var i = 0; i < metadata.Images.Length; i++)
+                                        {
+                                            foreach (var refVa3 in FindReferences(refVa2 - (ulong)i * ptrSize))
+                                                return refVa3;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    return 0;
+                }
+
+                ulong FindMetadataRegistration()
+                {
+                    foreach (var section in data)
+                    {
+                        var end = Math.Min((long)section.ImageEnd + 1, Image.Length) - ptrSize;
+                        for (var position = (long)section.ImageStart; position <= end; position += ptrSize)
+                        {
+                            Image.Position = position;
+                            if (Image.ReadWord() != metadata.Types.Length)
+                                continue;
+
+                            if (Image.Version >= MetadataVersions.V270)
+                            {
+                                Image.Position += ptrSize;
+                                if (Image.ReadWord() != metadata.Types.Length)
+                                    continue;
+
+                                try
+                                {
+                                    var listPointer = Image.MapVATR(ReadPointer());
+                                    if (!CheckFileOffsetInSections(listPointer, data))
+                                        continue;
+
+                                    var pointers = Image.ReadArray<ulong>((long)listPointer, metadata.Types.Length);
+                                    var valid = pointerInExec
+                                        ? CheckVirtualAddressInSections(pointers, exec)
+                                        : CheckVirtualAddressInSections(pointers, data);
+
+                                    if (valid)
+                                        return Image.MapFileOffsetToVA((uint)position) - ptrSize * 10;
+                                }
+                                catch
+                                {
+                                    // ignored
+                                }
+                            }
+                            else
+                            {
+                                if (metadataUsageCount == 0)
+                                    continue;
+
+                                try
+                                {
+                                    Image.Position += ptrSize * 2;
+                                    var listPointer = Image.MapVATR(ReadPointer());
+                                    if (!CheckFileOffsetInSections(listPointer, data))
+                                        continue;
+
+                                    var pointers = Image.ReadArray<ulong>((long)listPointer, metadataUsageCount);
+                                    if (CheckVirtualAddressInSections(pointers, bss))
+                                        return Image.MapFileOffsetToVA((uint)position) - ptrSize * 12;
+                                }
+                                catch
+                                {
+                                    // ignored
+                                }
+                            }
+                        }
+                    }
+
+                    return 0;
+                }
+
+                if (Image is IElfReader || Image is NsoReader)
+                {
+                    codeRegistration = FindCodeRegistration(exec);
+                    if (codeRegistration == 0)
+                    {
+                        codeRegistration = FindCodeRegistration(data);
+                    }
+                    else
+                    {
+                        pointerInExec = true;
+                    }
+                }
+                else
+                {
+                    codeRegistration = FindCodeRegistration(data);
+                    if (codeRegistration == 0)
+                    {
+                        codeRegistration = FindCodeRegistration(exec);
+                        pointerInExec = true;
+                    }
+                }
+
+                if (codeRegistration == 0)
+                    return (0, 0);
+
+                sectionCodeRegistrationNeedsNormalization = metadata.Version >= MetadataVersions.V242;
+
+                metadataRegistration = FindMetadataRegistration();
+                if (metadataRegistration == 0)
+                    return (0, 0);
+
+                if (sectionCodeRegistrationNeedsNormalization)
+                {
+                    try
+                    {
+                        var codeGenEndPtr = codeRegistration + ptrSize;
+                        codeRegistration = codeGenEndPtr - (ulong)Il2CppCodeRegistration.Size(Image.Version, Image.Bits == 32);
+
+                        var cr = Image.ReadMappedVersionedObject<Il2CppCodeRegistration>(codeRegistration);
+
+                        if (Image.Version == MetadataVersions.V242 && cr.InteropDataCount == 0)
+                        {
+                            Image.Version = MetadataVersions.V243;
+                            codeRegistration = codeGenEndPtr - (ulong)Il2CppCodeRegistration.Size(Image.Version, Image.Bits == 32);
+                        }
+
+                        if (Image.Version == MetadataVersions.V270 && cr.ReversePInvokeWrapperCount > 0x30000)
+                        {
+                            Image.Version = MetadataVersions.V271;
+                            codeRegistration = codeGenEndPtr - (ulong)Il2CppCodeRegistration.Size(Image.Version, Image.Bits == 32);
+                            cr = Image.ReadMappedVersionedObject<Il2CppCodeRegistration>(codeRegistration);
+                        }
+
+                        if (Image.Version == MetadataVersions.V244 &&
+                            (cr.InvokerPointersCount > 0x50000 || cr.ReversePInvokeWrapperCount > cr.ReversePInvokeWrappers))
+                        {
+                            Image.Version = MetadataVersions.V245;
+                            codeRegistration = codeGenEndPtr - (ulong)Il2CppCodeRegistration.Size(Image.Version, Image.Bits == 32);
+                            cr = Image.ReadMappedVersionedObject<Il2CppCodeRegistration>(codeRegistration);
+                        }
+
+                        if ((Image.Version == MetadataVersions.V290 || Image.Version == MetadataVersions.V310) &&
+                            cr.GenericMethodPointersCount >= cr.GenericMethodPointers)
+                        {
+                            Image.Version = new StructVersion(Image.Version.Major, 0, MetadataVersions.Tag2022);
+                            codeRegistration = codeGenEndPtr - (ulong)Il2CppCodeRegistration.Size(Image.Version, Image.Bits == 32);
+                        }
+                    }
+                    catch
+                    {
+                        codeRegistration = 0;
+                    }
+
+                    if (codeRegistration == 0)
+                        return (0, 0);
+                }
+
+                Console.WriteLine("Required structures acquired from section heuristics");
+            }
 
             return (codeRegistration, metadataRegistration);
         }

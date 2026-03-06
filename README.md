@@ -116,7 +116,7 @@ You can read more about how IL2CPP works in my series IL2CPP Reverse Engineering
 
 File format and architecture support:
 
-* Supports ELF (Android .so), PE (Windows .exe), Mach-O (Apple iOS/Mac), Universal Binary (Fat Mach-O) and FSELF (PlayStation 4 .prx/.sprx) file formats
+* Supports ELF (Android .so), PE (Windows .exe), Mach-O (Apple iOS/Mac), Universal Binary (Fat Mach-O), FSELF (PlayStation 4 .prx/.sprx) and NSO (Switch main) file formats
 * Also supports single and split APK (Android), AAB (Android App Bundle), XAPK, Zip and decrypted IPA (iOS) application package files as input
 * Supports ELF files created from memory dumps
 * Supports Linux process maps + corresponding .bin files - such as those produced by GameGuardian - without the need to manually extract the IL2CPP binary
