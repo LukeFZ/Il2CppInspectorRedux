@@ -247,6 +247,8 @@ namespace Il2CppInspector
             InterfaceOffsets = ReadMetadataArray<Il2CppInterfaceOffsetPair>(Header.InterfaceOffsetsOffset, Header.InterfaceOffsetsSize, Header.InterfaceOffsets);
             VTableMethodIndices = ReadMetadataPrimitiveArray<uint>(Header.VTableMethodsOffset, Header.VTableMethodsSize, Header.VtableMethods);
 
+            var useCompressedAssemblyPublicKeys = Version == MetadataVersions.V242 || Version >= MetadataVersions.V244;
+
             if (Version >= MetadataVersions.V160) 
             {
                 // In v24.4 hashValueIndex was removed from Il2CppAssemblyNameDefinition, which is a field in Il2CppAssemblyDefinition
@@ -260,6 +262,7 @@ namespace Il2CppInspector
                         changedAssemblyDefStruct = true;
 
                     Version = MetadataVersions.V244;
+                    useCompressedAssemblyPublicKeys = true;
                 }
 
                 Assemblies = ReadMetadataArray<Il2CppAssemblyDefinition>(Header.AssembliesOffset, Header.AssembliesSize, Header.Assemblies);
@@ -356,7 +359,7 @@ namespace Il2CppInspector
             }
 
             // These are stored in a special way, so we read them in advance.
-            if (Version == MetadataVersions.V242 || Version >= MetadataVersions.V244)
+            if (useCompressedAssemblyPublicKeys)
             {
                 var stringOffset = Version >= MetadataVersions.V380
                     ? Header.Strings.Offset
