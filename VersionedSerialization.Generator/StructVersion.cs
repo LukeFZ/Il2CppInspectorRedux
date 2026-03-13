@@ -1,20 +1,10 @@
 ﻿using System;
 
-namespace VersionedSerialization;
+namespace VersionedSerialization.Generator;
 
-public readonly struct StructVersion(int major = 0, int minor = 0, string? tag = null)
+public readonly record struct StructVersion(int Major = 0, int Minor = 0, string? Tag = null)
 {
-    public readonly int Major = major;
-    public readonly int Minor = minor;
-    public readonly string? Tag = tag;
-
     #region Equality operators
-
-    public static bool operator ==(StructVersion left, StructVersion right)
-        => left.Major == right.Major && left.Minor == right.Minor;
-
-    public static bool operator !=(StructVersion left, StructVersion right)
-        => !(left == right);
 
     public static bool operator >(StructVersion left, StructVersion right)
         => left.Major > right.Major || (left.Major == right.Major && left.Minor > right.Minor);
@@ -27,15 +17,6 @@ public readonly struct StructVersion(int major = 0, int minor = 0, string? tag =
 
     public static bool operator <=(StructVersion left, StructVersion right)
         => left.Major < right.Major || (left.Major == right.Major && left.Minor <= right.Minor);
-
-    public override bool Equals(object? obj)
-        => obj is StructVersion other && Equals(other);
-
-    public bool Equals(StructVersion other)
-        => Major == other.Major && Minor == other.Minor;
-
-    public override int GetHashCode()
-        => HashCode.Combine(Major, Minor, Tag);
 
     #endregion
 

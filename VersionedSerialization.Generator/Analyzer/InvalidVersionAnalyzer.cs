@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -7,7 +6,9 @@ using VersionedSerialization.Generator.Utils;
 
 namespace VersionedSerialization.Generator.Analyzer;
 
+#pragma warning disable RS1038
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
+#pragma warning restore RS1038
 public class InvalidVersionAnalyzer : DiagnosticAnalyzer
 {
     private const string Identifier = "VS0001";
@@ -49,7 +50,8 @@ public class InvalidVersionAnalyzer : DiagnosticAnalyzer
                 foreach (var argument in attribute.NamedArguments)
                 {
                     var name = argument.Key;
-                    if (name is Constants.LessThan or Constants.GreaterThan or Constants.EqualTo)
+                    if (name is Constants.LessThan or Constants.GreaterThan or Constants.EqualTo
+                        or Constants.LessThanOrEqual or Constants.GreaterThanOrEqual)
                     {
                         var value = (string)argument.Value.Value!;
 

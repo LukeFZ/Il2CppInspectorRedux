@@ -2,15 +2,16 @@
 
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
-		<AnalyzerRoslynVersion>4.10</AnalyzerRoslynVersion>
-		<RoslynApiVersion>4.10.0</RoslynApiVersion>
+		<LangVersion>latest</LangVersion>
+		<AnalyzerRoslynVersion>4.14</AnalyzerRoslynVersion>
+		<RoslynApiVersion>4.14.0</RoslynApiVersion>
 		<Nullable>enable</Nullable>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.10.0" PrivateAssets="all" />
-		<PackageReference Include="PolySharp" Version="1.14.1">
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.14.0" PrivateAssets="all" />
+		<PackageReference Include="PolySharp" Version="1.15.0">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>

@@ -1,23 +1,12 @@
-﻿using System.Collections.Immutable;
+﻿using System.Text;
 
 namespace VersionedSerialization;
 
 public interface IReader
 {
-    bool Is32Bit { get; }
+    string ReadString(int length = -1, Encoding? encoding = null);
+    ReadOnlySpan<byte> ReadBytes(long length);
 
-    bool ReadBoolean();
-    long ReadNInt();
-    ulong ReadNUInt();
-    string ReadString();
-    ReadOnlySpan<byte> ReadBytes(int length);
-
-    T ReadPrimitive<T>() where T : unmanaged;
-    ImmutableArray<T> ReadPrimitiveArray<T>(long count) where T : unmanaged;
-
-    T ReadVersionedObject<T>(in StructVersion version = default) where T : IReadable, new();
-    ImmutableArray<T> ReadVersionedObjectArray<T>(long count, in StructVersion version = default) where T : IReadable, new();
-
-    void Align(int alignment = 0);
-    void Skip(int count);
+    void Read<T>(scoped Span<T> dest) where T : unmanaged;
+    void ReadPrimitive<T>(scoped Span<T> dest) where T : unmanaged;
 }

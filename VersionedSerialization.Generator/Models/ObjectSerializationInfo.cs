@@ -7,6 +7,7 @@ public sealed record ObjectSerializationInfo(
     string Namespace,
     string Name,
     bool HasBaseType,
+    bool IsPublic,
     SyntaxKind DefinitionType,
     bool CanGenerateSizeMethod,
     ImmutableEquatableArray<PropertySerializationInfo> Properties
