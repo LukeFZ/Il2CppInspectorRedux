@@ -1,38 +1,31 @@
 ﻿using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using NoisyCowStudios.Bin2Object;
 using VersionedSerialization;
+using VersionedSerialization.Impl;
 
 namespace Il2CppInspector.Next;
 
-public class BinaryObjectStreamReader : BinaryObjectStream, IReader
+public class BinaryObjectStreamReader : BinaryObjectStream, ISeekableReader
 {
     public new StructVersion Version
     {
-        get => _version;
+        get;
         set
         {
-            _version = value;
-            base.Version = _version.AsDouble;
+            field = value;
+            base.Version = field.AsDouble;
         }
     }
-
-    private StructVersion _version;
 
     public virtual int Bits { get; set; }
     public bool Is32Bit => Bits == 32;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static TTo Cast<TFrom, TTo>(in TFrom from) => Unsafe.As<TFrom, TTo>(ref Unsafe.AsRef(in from));
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private T ReadInternal<T>() where T : unmanaged
-    {
-        var size = Unsafe.SizeOf<T>();
-        var value = MemoryMarshal.Read<T>(ReadBytes(size));
-        return value;
-    }
 
     public T ReadPrimitive<T>() where T : unmanaged
     {
@@ -60,60 +53,80 @@ public class BinaryObjectStreamReader : BinaryObjectStream, IReader
         if (typeof(T) == typeof(ulong))
             return Cast<ulong, T>(ReadUInt64());
 
-        return ReadInternal<T>();
+        Debug.Assert(false, "Invalid primitive type");
+        throw new InvalidOperationException();
+    }
+
+    public void ReadPrimitive<T>(scoped Span<T> dest) where T : unmanaged
+    {
+        for (int i = 0; i < dest.Length; i++)
+        {
+            dest[i] = ReadPrimitive<T>();
+        }
+    }
+
+    public void Read<T>(scoped Span<T> dest) where T : unmanaged
+    {
+        var asBytes = MemoryMarshal.Cast<T, byte>(dest);
+        Reader.ReadBytes(asBytes.Length).AsSpan().CopyTo(asBytes);
+    }
+
+    public string ReadString(int length = -1, Encoding encoding = null)
+    {
+        return length == -1 
+            ? ReadNullTerminatedString(encoding) 
+            : ReadFixedLengthString(length, encoding);
+    }
+
+    ReadOnlySpan<byte> IReader.ReadBytes(long length)
+    {
+        return ReadBytes(checked((int)length));
+    }
+
+    // Reader-wrapping helper methods
+
+    int ISeekableReader.Offset
+    {
+        get => checked((int)Position);
+        set => Position = value;
+    }
+
+    int ISeekableReader.Length => checked((int)Length);
+
+    public ulong ReadNativeUInt()
+    {
+        return Endianness == Endianness.Little
+            ? new Reader<LittleEndianSeekableReader<BinaryObjectStreamReader>>(
+                new LittleEndianSeekableReader<BinaryObjectStreamReader>(this), new ReaderConfig(Is32Bit)).ReadNativeUInt()
+            : new Reader<BigEndianSeekableReader<BinaryObjectStreamReader>>(
+                new BigEndianSeekableReader<BinaryObjectStreamReader>(this), new ReaderConfig(Is32Bit)).ReadNativeUInt();
+    }
+
+    public T ReadVersionedObject<T>() where T : IReadable, new()
+    {
+        return Endianness == Endianness.Little
+            ? new Reader<LittleEndianSeekableReader<BinaryObjectStreamReader>>(
+                new LittleEndianSeekableReader<BinaryObjectStreamReader>(this), new ReaderConfig(Is32Bit)).ReadVersionedObject<T>(Version)
+            : new Reader<BigEndianSeekableReader<BinaryObjectStreamReader>>(
+                new BigEndianSeekableReader<BinaryObjectStreamReader>(this), new ReaderConfig(Is32Bit)).ReadVersionedObject<T>(Version);
+    }
+
+    public ImmutableArray<T> ReadVersionedObjectArray<T>(long count) where T : IReadable, new()
+    {
+        return Endianness == Endianness.Little
+            ? new Reader<LittleEndianSeekableReader<BinaryObjectStreamReader>>(
+                new LittleEndianSeekableReader<BinaryObjectStreamReader>(this), new ReaderConfig(Is32Bit)).ReadVersionedObjectArray<T>(count, Version)
+            : new Reader<BigEndianSeekableReader<BinaryObjectStreamReader>>(
+                new BigEndianSeekableReader<BinaryObjectStreamReader>(this), new ReaderConfig(Is32Bit)).ReadVersionedObjectArray<T>(count, Version);
     }
 
     public ImmutableArray<T> ReadPrimitiveArray<T>(long count) where T : unmanaged
     {
-        var array = ImmutableArray.CreateBuilder<T>(checked((int)count));
-        for (long i = 0; i < count; i++)
-            array.Add(ReadPrimitive<T>());
-
-        return array.MoveToImmutable();
-    }
-
-    public T ReadVersionedObject<T>() where T : IReadable, new() => ReadVersionedObject<T>(Version);
-
-    public T ReadVersionedObject<T>(in StructVersion version = default) where T : IReadable, new()
-    {
-        var obj = new T();
-        var a = this;
-        obj.Read(ref a, in version);
-        return obj;
-    }
-
-    public ImmutableArray<T> ReadVersionedObjectArray<T>(long count) where T : IReadable, new() => ReadVersionedObjectArray<T>(count, Version);
-
-    public ImmutableArray<T> ReadVersionedObjectArray<T>(long count, in StructVersion version = default) where T : IReadable, new()
-    {
-        var array = ImmutableArray.CreateBuilder<T>(checked((int)count));
-        for (long i = 0; i < count; i++)
-            array.Add(ReadVersionedObject<T>(in version));
-
-        return array.MoveToImmutable();
-    }
-
-    public long ReadNInt()
-        => Is32Bit ? ReadPrimitive<int>() : ReadPrimitive<long>();
-
-    public ulong ReadNUInt()
-        => Is32Bit ? ReadPrimitive<uint>() : ReadPrimitive<ulong>();
-
-    public string ReadString() => ReadNullTerminatedString();
-
-    public new ReadOnlySpan<byte> ReadBytes(int length)
-    {
-        return base.ReadBytes(length);
-    }
-
-    public void Align(int alignment = 0)
-    {
-        if (alignment == 0)
-            alignment = Is32Bit ? 4 : 8;
-
-        var rem = Position % alignment;
-        if (rem != 0)
-            Position += alignment - rem;
+        return Endianness == Endianness.Little
+            ? new Reader<LittleEndianSeekableReader<BinaryObjectStreamReader>>(
+                new LittleEndianSeekableReader<BinaryObjectStreamReader>(this), new ReaderConfig(Is32Bit)).ReadPrimitiveArray<T>(count)
+            : new Reader<BigEndianSeekableReader<BinaryObjectStreamReader>>(
+                new BigEndianSeekableReader<BinaryObjectStreamReader>(this), new ReaderConfig(Is32Bit)).ReadPrimitiveArray<T>(count);
     }
 
     public TType ReadPrimitive<TType>(long addr) where TType : unmanaged
@@ -131,17 +144,13 @@ public class BinaryObjectStreamReader : BinaryObjectStream, IReader
     public TType ReadVersionedObject<TType>(long addr) where TType : IReadable, new()
     {
         Position = addr;
-        return ReadVersionedObject<TType>(Version);
+        return ReadVersionedObject<TType>();
     }
 
-    public ImmutableArray<TType> ReadVersionedObjectArray<TType>(long addr, long count) where TType : IReadable, new()
+    public ImmutableArray<TType> ReadVersionedObjectArray<TType>(long addr, long count)
+        where TType : IReadable, new()
     {
         Position = addr;
-        return ReadVersionedObjectArray<TType>(count, Version);
-    }
-
-    public void Skip(int count)
-    {
-        Position += count;
+        return ReadVersionedObjectArray<TType>(count);
     }
 }

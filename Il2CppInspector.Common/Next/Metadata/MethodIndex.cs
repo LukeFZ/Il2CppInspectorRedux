@@ -10,10 +10,10 @@ public struct MethodIndex(int value) : IIndexType<MethodIndex>, IReadable, IEqua
 
     private int _value = value;
 
-    public static int Size(in StructVersion version = default, bool is32Bit = false)
-        => IIndexType<MethodIndex>.IndexSize(version, is32Bit);
+    public static int Size(in StructVersion version = default, in ReaderConfig config = default)
+        => IIndexType<MethodIndex>.IndexSize(version, config);
 
-    public void Read<TReader>(ref TReader reader, in StructVersion version = default) where TReader : IReader, allows ref struct
+    public void Read<TReader>(ref Reader<TReader> reader, in StructVersion version = default) where TReader : IReader, allows ref struct
     {
         _value = IIndexType<MethodIndex>.ReadIndex(ref reader, in version);
     }

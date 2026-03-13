@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using VersionedSerialization;
 
 namespace Il2CppInspector
 {
@@ -194,7 +195,7 @@ namespace Il2CppInspector
                 var rels = ReadArray<MachO_relocation_info>(section.ImageRelocOffset, section.NumRelocEntries);
 
                 // TODO: Implement Mach-O relocations
-                if (rels.Any()) {
+                if (rels.Length > 0) {
                     AnsiConsole.WriteLine("Mach-O file contains relocations (feature not yet implemented)");
                     break;
                 }
@@ -341,7 +342,7 @@ namespace Il2CppInspector
                 var pointerFormat = (MachODyldChainedPtr)startsInfo.PointerFormat;
 
                 var pages = ReadPrimitiveArray<ushort>(
-                    startsBase + startOffset + MachODyldChainedStartsInSegment.Size(), startsInfo.PageCount);
+                    startsBase + startOffset + MachODyldChainedStartsInSegment.StructSize(), startsInfo.PageCount);
 
                 for (var i = 0; i < pages.Length; i++)
                 {

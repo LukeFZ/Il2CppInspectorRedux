@@ -135,7 +135,7 @@ namespace Il2CppInspector
                 // thankfully, we can just guess the size based off the three available options and the known total size of
                 // a type entry that uses TypeIndex.
                 var actualSize = Header.InterfaceOffsets.SectionSize / Header.InterfaceOffsets.Count;
-                var maxSize = Il2CppInterfaceOffsetPair.Size(tempVersion);
+                var maxSize = Il2CppInterfaceOffsetPair.StructSize(tempVersion);
 
                 int typeIndexSize;
                 if (actualSize == maxSize)
@@ -445,7 +445,7 @@ namespace Il2CppInspector
             CopyTo(outFile);
         }
 
-        public int Sizeof<T>() where T : IReadable => T.Size(Version, Is32Bit);
+        public int Sizeof<T>() where T : IReadable => T.Size(Version, new ReaderConfig(Is32Bit));
     }
 }
 

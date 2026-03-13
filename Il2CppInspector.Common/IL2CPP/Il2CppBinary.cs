@@ -418,8 +418,8 @@ namespace Il2CppInspector
 
                 }
 
-                var definitionSize = (ulong)Il2CppTypeDefinition.Size(Image.Version);
-                var genericParameterSize = (ulong)Il2CppGenericParameter.Size(Image.Version);
+                var definitionSize = (ulong)Il2CppTypeDefinition.StructSize(Image.Version);
+                var genericParameterSize = (ulong)Il2CppGenericParameter.StructSize(Image.Version);
 
                 var builder = ImmutableArray.CreateBuilder<Il2CppType>(TypeReferences.Length);
                 for (var i = 0; i < TypeReferences.Length; i++)

@@ -226,7 +226,7 @@ namespace Il2CppInspector
         }
 
         public static T Load(Stream stream, LoadOptions loadOptions = null, EventHandler<string> statusCallback = null) {
-            var binary = (T) Activator.CreateInstance(typeof(T));
+            var binary = Activator.CreateInstance<T>();
             if (stream.CanSeek)
                 stream.Position = 0;
             stream.CopyTo(binary);
@@ -375,7 +375,7 @@ namespace Il2CppInspector
         public ulong ReadMappedUWord(ulong uiAddr)
         {
             Position = MapVATR(uiAddr);
-            return ReadNUInt();
+            return ReadNativeUInt();
         }
 
         public ulong[] ReadMappedUWordArray(ulong uiAddr, int count)
@@ -383,7 +383,7 @@ namespace Il2CppInspector
             Position = MapVATR(uiAddr);
             var arr = new ulong[count];
             for (int i = 0; i < count; i++)
-                arr[i] = ReadNUInt();
+                arr[i] = ReadNativeUInt();
 
             return arr;
         }

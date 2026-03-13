@@ -13,23 +13,25 @@ public struct PrimitivePointer<T>(ulong value = 0) : IReadable, IEquatable<Primi
     public readonly ulong PointerValue => _value;
     public readonly bool Null => _value == 0;
 
-    public void Read<TReader>(ref TReader reader, in StructVersion version = default) where TReader : IReader, allows ref struct
+    void IReadable.Read<TReader>(ref Reader<TReader> reader, in StructVersion version)
     {
-        _value = reader.ReadNUInt();
+        _value = reader.ReadNativeUInt();
     }
 
-    public static int Size(in StructVersion version = default, bool is32Bit = false)
+    public static int Size(in StructVersion version = default, in ReaderConfig config = default)
     {
-        return is32Bit ? 4 : 8;
+        return config.Is32Bit ? sizeof(uint) : sizeof(ulong);
     }
 
-    public readonly T Read(ref SpanReader reader)
+    public readonly T Read<TReader>(ref Reader<TReader> reader)
+        where TReader : ISeekableReader, allows ref struct
     {
         reader.Offset = (int)PointerValue;
         return reader.ReadPrimitive<T>();
     }
 
-    public readonly ImmutableArray<T> ReadArray(ref SpanReader reader, long count)
+    public readonly ImmutableArray<T> ReadArray<TReader>(ref Reader<TReader> reader, long count)
+        where TReader : ISeekableReader, allows ref struct
     {
         reader.Offset = (int)PointerValue;
         return reader.ReadPrimitiveArray<T>(count);
