@@ -2419,3 +2419,5 @@ typedef struct Il2CppByReference
 {
     intptr_t value;
 } Il2CppByReference;
+typedef void* Il2CppGCHandle;
+typedef uint8_t(*Il2CppAndroidUpStateFunc)(const char* ifName, uint8_t* is_up);
