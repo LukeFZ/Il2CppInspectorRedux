@@ -37,10 +37,10 @@ public interface IIndexType<T> where T
         return numberChar - Il2CppMetadataIndex.NumberZeroChar;
     }
 
-    public static int IndexSize(in StructVersion version = default, bool is32Bit = false)
+    public static int IndexSize(in StructVersion version = default, in ReaderConfig config = default)
         => GetSizeFromTag(version);
 
-    public static int ReadIndex<TReader>(ref TReader reader, in StructVersion version = default) where TReader : IReader, allows ref struct
+    public static int ReadIndex<TReader>(ref Reader<TReader> reader, in StructVersion version = default) where TReader : IReader, allows ref struct
     {
         var size = GetSizeFromTag(in version);
 

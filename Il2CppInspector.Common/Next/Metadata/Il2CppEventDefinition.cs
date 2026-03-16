@@ -12,10 +12,10 @@ public partial record struct Il2CppEventDefinition
     public MethodIndex Remove { get; private set; }
     public MethodIndex Raise { get; private set; }
 
-    [VersionCondition(LessThan = "24.0")]
+    [VersionCondition(LessThanOrEqual = "24.0")]
     public int CustomAttributeIndex { get; private set; }
 
-    [VersionCondition(GreaterThan = "19.0")]
+    [VersionCondition(GreaterThanOrEqual = "19.0")]
     public uint Token { get; private set; }
 
     public readonly bool IsValid => NameIndex != 0;

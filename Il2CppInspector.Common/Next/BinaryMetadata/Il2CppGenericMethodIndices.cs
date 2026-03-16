@@ -11,6 +11,6 @@ public partial record struct Il2CppGenericMethodIndices
     public MethodIndex InvokerIndex;
 
     [VersionCondition(EqualTo = "24.5")]
-    [VersionCondition(GreaterThan = "27.1")]
+    [VersionCondition(GreaterThanOrEqual = "27.1")]
     public MethodIndex AdjustorThunkIndex;
 }

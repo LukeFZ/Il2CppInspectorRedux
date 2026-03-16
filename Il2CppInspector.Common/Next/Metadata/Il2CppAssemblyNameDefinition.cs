@@ -26,15 +26,14 @@ public partial record struct Il2CppAssemblyNameDefinition
     public StringIndex CultureIndex;
 
     [FieldOffset(8)]
-    [VersionCondition(LessThan = "24.3")]
+    [VersionCondition(LessThanOrEqual = "24.3")]
     public int HashValueIndex;
 
     [FieldOffset(12)]
     public StringIndex PublicKeyIndex;
 
     [FieldOffset(44)]
-    [VersionCondition(LessThan = "15.0")]
-    [CustomSerialization("reader.ReadPrimitive<PublicKeyToken>();", "8")]
+    [VersionCondition(LessThanOrEqual = "15.0")]
     private PublicKeyToken _legacyPublicKeyToken;
 
     [FieldOffset(16)]
@@ -59,6 +58,5 @@ public partial record struct Il2CppAssemblyNameDefinition
     public int Revision;
 
     [FieldOffset(44)]
-    [CustomSerialization("reader.ReadPrimitive<PublicKeyToken>();", "8")]
     public PublicKeyToken PublicKeyToken;
 }

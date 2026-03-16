@@ -6,10 +6,10 @@ namespace Il2CppInspector.Next.BinaryMetadata;
 public partial record struct Il2CppGenericClass
 {
     [NativeInteger]
-    [VersionCondition(LessThan = "24.5")]
+    [VersionCondition(LessThanOrEqual = "24.5")]
     public int TypeDefinitionIndex;
 
-    [VersionCondition(GreaterThan = "27.0")]
+    [VersionCondition(GreaterThanOrEqual = "27.0")]
     public Pointer<Il2CppType> Type;
 
     public Il2CppGenericContext Context;

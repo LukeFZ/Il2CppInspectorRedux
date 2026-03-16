@@ -10,30 +10,30 @@ using ImageIndex = int;
 public partial record struct Il2CppAssemblyDefinition
 {
     [FieldOffset(20)]
-    [VersionCondition(LessThan = "15.0")]
+    [VersionCondition(LessThanOrEqual = "15.0")]
     public Il2CppAssemblyNameDefinition LegacyAname;
 
     [FieldOffset(0)]
     public ImageIndex ImageIndex;
 
     [FieldOffset(4)]
-    [VersionCondition(GreaterThan = "24.1")]
+    [VersionCondition(GreaterThanOrEqual = "24.1")]
     public uint Token;
 
     [FieldOffset(20 + 52)]
-    [VersionCondition(GreaterThan = "38.0")]
+    [VersionCondition(GreaterThanOrEqual = "38.0")]
     public uint ModuleToken;
 
     [FieldOffset(8)]
-    [VersionCondition(LessThan = "24.0")]
+    [VersionCondition(LessThanOrEqual = "24.0")]
     public int CustomAttributeIndex;
 
     [FieldOffset(12)]
-    [VersionCondition(GreaterThan = "20.0")]
+    [VersionCondition(GreaterThanOrEqual = "20.0")]
     public int ReferencedAssemblyStart;
 
     [FieldOffset(16)]
-    [VersionCondition(GreaterThan = "20.0")]
+    [VersionCondition(GreaterThanOrEqual = "20.0")]
     public int ReferencedAssemblyCount;
 
     [FieldOffset(20)]

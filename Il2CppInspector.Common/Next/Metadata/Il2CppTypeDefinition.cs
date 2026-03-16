@@ -15,38 +15,38 @@ public partial record struct Il2CppTypeDefinition
     public StringIndex NameIndex { get; private set; }
     public StringIndex NamespaceIndex { get; private set; }
 
-    [VersionCondition(LessThan = "24.0")]
+    [VersionCondition(LessThanOrEqual = "24.0")]
     public int CustomAttributeIndex { get; private set; }
 
     public TypeIndex ByValTypeIndex { get; private set; }
 
-    [VersionCondition(LessThan = "24.5")]
+    [VersionCondition(LessThanOrEqual = "24.5")]
     public TypeIndex ByRefTypeIndex { get; private set; }
 
     public TypeIndex DeclaringTypeIndex { get; private set; }
     public TypeIndex ParentIndex { get; private set; }
 
-    [VersionCondition(LessThan = "31.0")]
+    [VersionCondition(LessThanOrEqual = "31.0")]
     public TypeIndex ElementTypeIndex { get; private set; }
 
-    [VersionCondition(LessThan = "24.1")]
+    [VersionCondition(LessThanOrEqual = "24.1")]
     public int RgctxStartIndex { get; private set; }
 
-    [VersionCondition(LessThan = "24.1")]
+    [VersionCondition(LessThanOrEqual = "24.1")]
     public int RgctxCount { get; private set; }
 
     public GenericContainerIndex GenericContainerIndex { get; private set; }
 
-    [VersionCondition(LessThan = "22.0")]
+    [VersionCondition(LessThanOrEqual = "22.0")]
     public int ReversePInvokeWrapperIndex { get; private set; }
 
-    [VersionCondition(LessThan = "22.0")]
+    [VersionCondition(LessThanOrEqual = "22.0")]
     public int MarshalingFunctionsIndex { get; private set; }
 
-    [VersionCondition(GreaterThan = "21.0", LessThan = "22.0")]
+    [VersionCondition(GreaterThanOrEqual = "21.0", LessThanOrEqual = "22.0")]
     public int CcwFunctionIndex { get; private set; }
 
-    [VersionCondition(GreaterThan = "21.0", LessThan = "22.0")]
+    [VersionCondition(GreaterThanOrEqual = "21.0", LessThanOrEqual = "22.0")]
     public int GuidIndex { get; private set; }
 
     public TypeAttributes Flags { get; private set; }
@@ -71,7 +71,7 @@ public partial record struct Il2CppTypeDefinition
 
     public Il2CppTypeDefinitionBitfield Bitfield { get; private set; }
 
-    [VersionCondition(GreaterThan = "19.0")]
+    [VersionCondition(GreaterThanOrEqual = "19.0")]
     public uint Token { get; private set; }
 
     public readonly bool IsValid => NameIndex != 0;

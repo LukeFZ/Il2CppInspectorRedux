@@ -35,10 +35,10 @@ public partial record struct Il2CppMetadataRegistration
     public Pointer<Il2CppMethodSpec> MethodSpecs;
 
     [NativeInteger]
-    [VersionCondition(LessThan = "16.0")]
+    [VersionCondition(LessThanOrEqual = "16.0")]
     public int MethodReferencesCount;
 
-    [VersionCondition(LessThan = "16.0")]
+    [VersionCondition(LessThanOrEqual = "16.0")]
     public PrimitivePointer<PrimitivePointer<uint>> MethodReferences; // uint**
 
     [NativeInteger]
@@ -51,9 +51,9 @@ public partial record struct Il2CppMetadataRegistration
     public Pointer<Pointer<Il2CppTypeDefinitionSizes>> TypeDefinitionsSizes;
 
     [NativeInteger]
-    [VersionCondition(GreaterThan = "19.0")]
+    [VersionCondition(GreaterThanOrEqual = "19.0")]
     public ulong MetadataUsagesCount;
 
-    [VersionCondition(GreaterThan = "19.0")]
+    [VersionCondition(GreaterThanOrEqual = "19.0")]
     public Pointer<Pointer<Il2CppMetadataUsage>> MetadataUsages;
 }

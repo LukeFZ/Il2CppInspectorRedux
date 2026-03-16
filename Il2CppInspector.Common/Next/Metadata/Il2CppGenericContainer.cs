@@ -11,19 +11,19 @@ public partial record struct Il2CppGenericContainer
     [field: FieldOffset(0)]
     public int OwnerIndex { get; private set; }
 
-    [VersionCondition(LessThan = "105.0")]
+    [VersionCondition(LessThan = "106.0")]
     [field: FieldOffset(4)]
     public int TypeArgc { get; private set; }
 
-    [VersionCondition(GreaterThan = "106.0")]
+    [VersionCondition(GreaterThanOrEqual = "106.0")]
     [field: FieldOffset(4)]
     private ushort _newTypeArgc;
 
-    [VersionCondition(LessThan = "105.0")]
+    [VersionCondition(LessThan = "106.0")]
     [field: FieldOffset(8)]
     public int IsMethod { get; private set; }
 
-    [VersionCondition(GreaterThan = "106.0")]
+    [VersionCondition(GreaterThanOrEqual = "106.0")]
     [field: FieldOffset(8)]
     public byte _newIsMethod;
 

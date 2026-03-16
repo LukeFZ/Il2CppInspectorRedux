@@ -14,21 +14,21 @@ public partial record struct Il2CppImageDefinition
     public TypeDefinitionIndex TypeStart { get; private set; }
     public uint TypeCount { get; private set; }
 
-    [VersionCondition(GreaterThan = "24.0")]
+    [VersionCondition(GreaterThanOrEqual = "24.0")]
     public TypeDefinitionIndex ExportedTypeStart { get; private set; }
 
-    [VersionCondition(GreaterThan = "24.0")]
+    [VersionCondition(GreaterThanOrEqual = "24.0")]
     public uint ExportedTypeCount { get; private set; }
 
     public MethodIndex EntryPointIndex { get; private set; }
 
-    [VersionCondition(GreaterThan = "19.0")]
+    [VersionCondition(GreaterThanOrEqual = "19.0")]
     public uint Token { get; private set; }
 
-    [VersionCondition(GreaterThan = "24.1")]
+    [VersionCondition(GreaterThanOrEqual = "24.1")]
     public CustomAttributeIndex CustomAttributeStart { get; private set; }
 
-    [VersionCondition(GreaterThan = "24.1")]
+    [VersionCondition(GreaterThanOrEqual = "24.1")]
     public uint CustomAttributeCount { get; private set; }
 
     public readonly bool IsValid => NameIndex != 0;

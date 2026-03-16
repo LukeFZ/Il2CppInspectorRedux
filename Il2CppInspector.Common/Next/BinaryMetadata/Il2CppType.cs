@@ -23,14 +23,14 @@ public record struct Il2CppType : IReadable
         public readonly Il2CppMetadataGenericParameterHandle GenericParameterHandle => Value;
         public readonly Pointer<Il2CppGenericClass> GenericClass => Value;
 
-        public void Read<TReader>(ref TReader reader, in StructVersion version = default) where TReader : IReader, allows ref struct
+        public void Read<TReader>(ref Reader<TReader> reader, in StructVersion version = default) where TReader : IReader, allows ref struct
         {
-            Value = reader.ReadNUInt();
+            Value = reader.ReadNativeUInt();
         }
 
-        public static int Size(in StructVersion version = default, bool is32Bit = false)
+        static int IReadable.Size(in StructVersion version, in ReaderConfig config)
         {
-            return is32Bit ? 4 : 8;
+            return config.Is32Bit ? 4 : 8;
         }
     }
 
@@ -73,7 +73,7 @@ public record struct Il2CppType : IReadable
         set => Value = (Value & 0x7FFFFFFF) | (value ? 1u : 0u) << 31;
     }
 
-    public void Read<TReader>(ref TReader reader, in StructVersion version = default) where TReader : IReader, allows ref struct
+    public void Read<TReader>(ref Reader<TReader> reader, in StructVersion version = default) where TReader : IReader, allows ref struct
     {
         Data.Read(ref reader, version);
         Value = reader.ReadPrimitive<uint>();
@@ -98,9 +98,9 @@ public record struct Il2CppType : IReadable
         }
     }
 
-    public static int Size(in StructVersion version = default, bool is32Bit = false)
+    public static int Size(in StructVersion version = default, in ReaderConfig config = default)
     {
-        return DataUnion.Size(version, is32Bit) + sizeof(uint);
+        return DataUnion.StructSize(version, config) + sizeof(uint);
     }
 
     public static Il2CppType FromTypeEnum(Il2CppTypeEnum type)

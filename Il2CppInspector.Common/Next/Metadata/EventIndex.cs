@@ -10,10 +10,10 @@ public struct EventIndex(int value) : IIndexType<EventIndex>, IReadable, IEquata
 
     private int _value = value;
 
-    public static int Size(in StructVersion version = default, bool is32Bit = false)
-        => IIndexType<EventIndex>.IndexSize(version, is32Bit);
+    public static int Size(in StructVersion version = default, in ReaderConfig config = default)
+        => IIndexType<EventIndex>.IndexSize(version, config);
 
-    public void Read<TReader>(ref TReader reader, in StructVersion version = default) where TReader : IReader, allows ref struct
+    public void Read<TReader>(ref Reader<TReader> reader, in StructVersion version = default) where TReader : IReader, allows ref struct
     {
         _value = IIndexType<EventIndex>.ReadIndex(ref reader, in version);
     }

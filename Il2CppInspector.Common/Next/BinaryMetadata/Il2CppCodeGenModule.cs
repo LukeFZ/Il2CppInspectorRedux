@@ -14,11 +14,11 @@ public partial record struct Il2CppCodeGenModule
 
     [NativeInteger]
     [VersionCondition(EqualTo = "24.5")]
-    [VersionCondition(GreaterThan = "27.1")]
+    [VersionCondition(GreaterThanOrEqual = "27.1")]
     public uint AdjustorThunksCount;
 
     [VersionCondition(EqualTo = "24.5")]
-    [VersionCondition(GreaterThan = "27.1")]
+    [VersionCondition(GreaterThanOrEqual = "27.1")]
     public Pointer<Il2CppTokenAdjustorThunkPair> AdjustorThunks;
 
     public PrimitivePointer<int> InvokerIndices; // int*
@@ -38,18 +38,18 @@ public partial record struct Il2CppCodeGenModule
 
     public PrimitivePointer<byte> DebuggerMetadata; // Pointer<Il2CppDebuggerMetadataRegistration> DebuggerMetadata;
 
-    [VersionCondition(GreaterThan = "27.0", LessThan = "27.2")]
+    [VersionCondition(GreaterThanOrEqual = "27.0", LessThanOrEqual = "27.2")]
     public Pointer<Il2CppMethodPointer> CustomAttributeCacheGenerator;
 
-    [VersionCondition(GreaterThan = "27.0")]
+    [VersionCondition(GreaterThanOrEqual = "27.0")]
     public Il2CppMethodPointer ModuleInitializer;
 
-    [VersionCondition(GreaterThan = "27.0")]
+    [VersionCondition(GreaterThanOrEqual = "27.0")]
     public PrimitivePointer<int> StaticConstructorTypeIndices; // TypeDefinitionIndex*
 
-    [VersionCondition(GreaterThan = "27.0")]
+    [VersionCondition(GreaterThanOrEqual = "27.0")]
     public PrimitivePointer<byte> MetadataRegistration; // Pointer<Il2CppMetadataRegistration>
 
-    [VersionCondition(GreaterThan = "27.0")]
+    [VersionCondition(GreaterThanOrEqual = "27.0")]
     public PrimitivePointer<byte> CodeRegistration; // Pointer<Il2CppCodeRegistration>
 }

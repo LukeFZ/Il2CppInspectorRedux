@@ -10,33 +10,33 @@ public partial record struct Il2CppMethodDefinition
 {
     public StringIndex NameIndex { get; private set; }
 
-    [VersionCondition(GreaterThan = "16.0")]
+    [VersionCondition(GreaterThanOrEqual = "16.0")]
     public TypeDefinitionIndex DeclaringType { get; private set; }
     public TypeIndex ReturnType { get; private set; }
 
-    [VersionCondition(GreaterThan = "31.0")]
+    [VersionCondition(GreaterThanOrEqual = "31.0")]
     public uint ReturnParameterToken { get; private set; }
 
     public ParameterIndex ParameterStart { get; private set; }
 
-    [VersionCondition(LessThan = "24.0")]
+    [VersionCondition(LessThanOrEqual = "24.0")]
     public int CustomAttributeIndex { get; private set; }
 
     public GenericContainerIndex GenericContainerIndex { get; private set; }
 
-    [VersionCondition(LessThan = "24.1")]
+    [VersionCondition(LessThanOrEqual = "24.1")]
     public int MethodIndex { get; private set; }
 
-    [VersionCondition(LessThan = "24.1")]
+    [VersionCondition(LessThanOrEqual = "24.1")]
     public int InvokerIndex { get; private set; }
 
-    [VersionCondition(LessThan = "24.1")]
+    [VersionCondition(LessThanOrEqual = "24.1")]
     public int ReversePInvokeWrapperIndex { get; private set; }
 
-    [VersionCondition(LessThan = "24.1")]
+    [VersionCondition(LessThanOrEqual = "24.1")]
     public int RgctxStartIndex { get; private set; }
 
-    [VersionCondition(LessThan = "24.1")]
+    [VersionCondition(LessThanOrEqual = "24.1")]
     public int RgctxCount { get; private set; }
 
     public uint Token { get; private set; }
