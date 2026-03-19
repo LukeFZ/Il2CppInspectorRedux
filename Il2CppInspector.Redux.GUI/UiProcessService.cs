@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Il2CppInspector.Redux.GUI;
 
@@ -9,11 +10,13 @@ public class UiProcessService(IHostApplicationLifetime lifetime) : BackgroundSer
 
     private Process? _uiProcess;
     private string? _uiExectuablePath;
+    private readonly TaskCompletionSource _uiProcessCreatedTask = new();
 
     public void LaunchUiProcess(int port)
     {
         _uiExectuablePath ??= ExtractUiExecutable();
         _uiProcess = Process.Start(new ProcessStartInfo(_uiExectuablePath, [port.ToString()]));
+        _uiProcessCreatedTask.SetResult();
     }
 
     private static string ExtractUiExecutable()
@@ -40,11 +43,17 @@ public class UiProcessService(IHostApplicationLifetime lifetime) : BackgroundSer
         }
     }
 
+    [MemberNotNull(nameof(_uiProcess))]
+    private async Task WaitForUiLaunchAsync(CancellationToken cancellationToken)
+    {
+        await _uiProcessCreatedTask.Task.WaitAsync(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        Debug.Assert(_uiProcess != null);
+    }
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        while (_uiProcess == null)
-            await Task.Delay(TimeSpan.FromMilliseconds(10), stoppingToken);
-
+        await WaitForUiLaunchAsync(stoppingToken);
         await _uiProcess.WaitForExitAsync(stoppingToken);
         lifetime.StopApplication();
     }

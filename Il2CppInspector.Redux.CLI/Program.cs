@@ -19,7 +19,7 @@ builder.Services.Configure<JsonHubProtocolOptions>(options =>
 builder.Services.AddFrontendCore();
 builder.Logging.ClearProviders();
 
-var app = builder.Build();
+await using var app = builder.Build();
 
 app.UseCors();
 

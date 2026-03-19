@@ -18,7 +18,7 @@ builder.Services.AddFrontendCore();
 builder.Services.AddSingleton<UiProcessService>();
 builder.Services.AddHostedService(p => p.GetRequiredService<UiProcessService>());
 
-var app = builder.Build();
+await using var app = builder.Build();
 
 app.UseCors();
 
