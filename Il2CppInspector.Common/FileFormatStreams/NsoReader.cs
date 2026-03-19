@@ -7,26 +7,32 @@ using System.Collections.Frozen;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
+using Il2CppInspector.Next;
 using VersionedSerialization;
 
 namespace Il2CppInspector;
 
-internal abstract class MemoryBackingBuffer : IDisposable
+// These are slimmed-down versions of the project the loader originated from,
+// which is why the API might look a bit weird
+internal class ByteArrayBackingBuffer : IDisposable
 {
-    public abstract bool Initialized { get; protected set; }
+    [MemberNotNullWhen(true, nameof(Buffer))]
+    public bool Initialized { get; protected set; }
 
     public bool IsLittleEndian { get; protected set; }
     public bool Is32Bit { get; protected set; }
     public ulong BaseAddress { get; protected set; }
+    public byte[]? Buffer { get; private set; }
 
-    protected abstract Span<byte> Data { get; }
+    protected Span<byte> Data => Buffer.AsSpan();
 
-    public virtual void Initialize(long capacity, bool littleEndian, bool is32Bit, ulong baseAddress)
+    public void Initialize(long capacity, bool littleEndian, bool is32Bit, ulong baseAddress)
     {
         IsLittleEndian = littleEndian;
         Is32Bit = is32Bit;
         BaseAddress = baseAddress;
+        Buffer = new byte[capacity];
+        Initialized = true;
     }
 
     protected int TranslateVaToRva(ulong address)
@@ -107,23 +113,6 @@ internal abstract class MemoryBackingBuffer : IDisposable
     }
 }
 
-internal class ByteArrayBackingBuffer : MemoryBackingBuffer
-{
-    [MemberNotNullWhen(true, nameof(Buffer))]
-    public override bool Initialized { get; protected set; }
-
-    public byte[]? Buffer { get; private set; }
-
-    protected override Span<byte> Data => Buffer.AsSpan();
-
-    public override void Initialize(long capacity, bool littleEndian, bool is32Bit, ulong baseAddress)
-    {
-        base.Initialize(capacity, littleEndian, is32Bit, baseAddress);
-        Buffer = new byte[capacity];
-        Initialized = true;
-    }
-}
-
 public class NsoReader : FileFormatStream<NsoReader>
 {
     public override string DefaultFilename => "main";
@@ -146,11 +135,11 @@ public class NsoReader : FileFormatStream<NsoReader>
 
     protected override bool Init()
     {
-        var reader = VersionedSerialization.Reader.LittleEndian(GetBuffer());
-        var magic = reader.ReadPrimitive<uint>();
+        var magic = ReadPrimitive<uint>();
         if (magic != NsoHeader.ExpectedMagic)
             return false;
 
+        Position = 0;
         LoadInternal();
 
         Position = 0;
@@ -160,24 +149,28 @@ public class NsoReader : FileFormatStream<NsoReader>
     }
 
     private readonly ByteArrayBackingBuffer _mappedExecutable = new();
-    private bool _is32Bit;
     private FrozenDictionary<DynamicTag, ulong> _dynamicEntries = FrozenDictionary<DynamicTag, ulong>.Empty;
     private ImmutableArray<(ulong Start, ulong End)> _relocationEntryRegions = [];
+    private bool _is32Bit;
 
     private void LoadInternal()
     {
-        var reader = VersionedSerialization.Reader.LittleEndian(GetBuffer());
-        var header = reader.ReadVersionedObject<NsoHeader>();
+        var header = ReadVersionedObject<NsoHeader>();
 
         var totalLength = header.TextSegment.Size + header.RoSegment.Size + header.DataSegment.Size + header.BssSize;
 
         _mappedExecutable.Initialize(totalLength, true, false, 0);
 
-        LoadSegment(ref reader, in header.TextSegment, header.TextFileSize, header.Flags.HasFlag(SegmentFlags.TextCompress));
-        LoadSegment(ref reader, in header.RoSegment, header.RoFileSize, header.Flags.HasFlag(SegmentFlags.RoCompress));
-        LoadSegment(ref reader, in header.DataSegment, header.DataFileSize, header.Flags.HasFlag(SegmentFlags.DataCompress));
+        LoadSegment(in header.TextSegment, header.TextFileSize, header.Flags.HasFlag(SegmentFlags.TextCompress));
+        LoadSegment(in header.RoSegment, header.RoFileSize, header.Flags.HasFlag(SegmentFlags.RoCompress));
+        LoadSegment(in header.DataSegment, header.DataFileSize, header.Flags.HasFlag(SegmentFlags.DataCompress));
 
-        var modInfoHeader = _mappedExecutable.ReadObject<ModInfoHeader>(header.TextSegment.MemoryOffset, default);
+        LoadMappedExecutable(header.TextSegment.MemoryOffset);
+    }
+
+    private void LoadMappedExecutable(uint textSegmentRva)
+    {
+        var modInfoHeader = _mappedExecutable.ReadObject<ModInfoHeader>(textSegmentRva, default);
         var modHeader = _mappedExecutable.ReadObject<ModHeader>(modInfoHeader.ModOffset, default);
 
         Debug.Assert(modHeader.ValidMagic);
@@ -190,6 +183,8 @@ public class NsoReader : FileFormatStream<NsoReader>
 
         var currentDynamicOffset = modInfoHeader.ModOffset + modHeader.DynamicOffset;
         var dynamicEntries = new Dictionary<DynamicTag, ulong>();
+        var dynamicEntrySize = (uint)DynamicEntry.StructSize(config: new ReaderConfig(Is32Bit));
+
         while (true)
         {
             var entry = _mappedExecutable.ReadObject<DynamicEntry>(currentDynamicOffset, default);
@@ -197,7 +192,7 @@ public class NsoReader : FileFormatStream<NsoReader>
                 break;
 
             dynamicEntries[entry.Tag] = entry.Value;
-            currentDynamicOffset += 2 * (Is32Bit ? 4u : 8u);
+            currentDynamicOffset += dynamicEntrySize;
         }
 
         _dynamicEntries = dynamicEntries.ToFrozenDictionary();
@@ -205,10 +200,12 @@ public class NsoReader : FileFormatStream<NsoReader>
         ApplyRelocations();
     }
 
-    private void LoadSegment<T>(ref Reader<T> reader, ref readonly SegmentHeader header, uint fileSize, bool isCompressed)
-        where T : ISeekableReader, allows ref struct
+    private void LoadSegment(ref readonly SegmentHeader header, uint fileSize, bool isCompressed)
     {
-        reader.Offset = checked((int)header.FileOffset);
+        var reader = new Reader<BinaryObjectStreamReader>(this)
+        {
+            Offset = checked((int)header.FileOffset)
+        };
         var data = reader.ReadBytes(checked((int)fileSize));
 
         if (!isCompressed)
@@ -234,9 +231,6 @@ public class NsoReader : FileFormatStream<NsoReader>
     // Copied and trimmed down from ElfBinary
     private void ApplyRelocations()
     {
-        if (_mappedExecutable == null)
-            throw new InvalidOperationException("Cannot apply relocations without executable being mapped");
-
         if (!_dynamicEntries.TryGetValue(DynamicTag.DT_SYMTAB, out var symtabAddress)
             || !_dynamicEntries.TryGetValue(DynamicTag.DT_SYMENT, out var symtabEntrySize))
             return;
@@ -312,6 +306,10 @@ public class NsoReader : FileFormatStream<NsoReader>
                 if (handled)
                 {
                     _mappedExecutable.WriteNUInt(offset, value);
+                }
+                else
+                {
+                    Debug.Assert(false);
                 }
             }
         }
