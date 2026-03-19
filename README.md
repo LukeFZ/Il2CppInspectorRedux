@@ -29,6 +29,7 @@ This is a continuation of [Il2CppInspector, by djkaty](https://github.com/djkaty
     - A fake xref between MethodInfo instances and their corresponding method to quickly get the correct function
 * Binary Ninja script output, with all of the IDA-exclusive features
 * New cross-platform capable CLI and GUIs with dark mode support, providing the same output formats.
+* Support for NSO binaries
 
 > [!NOTE]  
 > As not all of the old UI features are implemented in the new UIs yet,
