@@ -1,5 +1,6 @@
 ﻿#nullable enable
 
+using Il2CppInspector.Next;
 using K4os.Compression.LZ4;
 using System.Buffers;
 using System.Buffers.Binary;
@@ -7,7 +8,6 @@ using System.Collections.Frozen;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using Il2CppInspector.Next;
 using VersionedSerialization;
 
 namespace Il2CppInspector;
@@ -33,6 +33,12 @@ internal class ByteArrayBackingBuffer : IDisposable
         BaseAddress = baseAddress;
         Buffer = new byte[capacity];
         Initialized = true;
+    }
+
+    public void SetBaseAddress(ulong baseAddress)
+    {
+        Debug.Assert(BaseAddress == 0);
+        BaseAddress = baseAddress;
     }
 
     protected int TranslateVaToRva(ulong address)
@@ -120,9 +126,6 @@ public class NsoReader : FileFormatStream<NsoReader>
     public override string Arch => "ARM64";
     public override string Format => "NSO";
 
-    // NOTE: This does not work for some reason?
-    // public override ulong ImageBase => 0x7100000000;
-
     protected override void Dispose(bool disposing)
     {
         if (disposing)
@@ -181,13 +184,18 @@ public class NsoReader : FileFormatStream<NsoReader>
         var thirdEntry = _mappedExecutable.ReadPrimitive<ulong>(modInfoHeader.ModOffset + modHeader.DynamicOffset + (2 * 0x8));
         _is32Bit = firstEntry > uint.MaxValue || thirdEntry > uint.MaxValue;
 
+        // These were pulled from nxo64.py, the IDA loader for switch objects
+        var baseAddress = Is32Bit ? 0x60000000u : 0x7100000000u;
+        GlobalOffset = baseAddress;
+        _mappedExecutable.SetBaseAddress(baseAddress);
+
         var currentDynamicOffset = modInfoHeader.ModOffset + modHeader.DynamicOffset;
         var dynamicEntries = new Dictionary<DynamicTag, ulong>();
         var dynamicEntrySize = (uint)DynamicEntry.StructSize(config: new ReaderConfig(Is32Bit));
 
         while (true)
         {
-            var entry = _mappedExecutable.ReadObject<DynamicEntry>(currentDynamicOffset, default);
+            var entry = _mappedExecutable.ReadObject<DynamicEntry>(ImageBase + currentDynamicOffset, default);
             if (entry.Tag == DynamicTag.DT_NULL)
                 break;
 
@@ -266,7 +274,7 @@ public class NsoReader : FileFormatStream<NsoReader>
         // Clear out relocation sections in memory so searching is faster
         foreach (var (start, end) in _relocationEntryRegions)
         {
-            _mappedExecutable.Clear(start, checked((long)(end - start)));
+            _mappedExecutable.Clear(ImageBase + start, checked((long)(end - start)));
         }
 
         return;
@@ -283,12 +291,12 @@ public class NsoReader : FileFormatStream<NsoReader>
                 var offset = relocation.Offset;
                 var type = (RelocationType)(Is32Bit ? relocation.Info & byte.MaxValue : relocation.Info & uint.MaxValue);
                 var symbolIndex = (uint)(relocation.Info >> (Is32Bit ? 8 : 32));
-                var addend = checked((ulong)(relocation.Addend ?? _mappedExecutable.ReadPrimitive<long>(offset)));
+                var addend = checked((ulong)(relocation.Addend ?? _mappedExecutable.ReadPrimitive<long>(ImageBase + offset)));
 
                 if (!symbolCache.TryGetValue(symbolIndex, out var symbolEntry))
                 {
                     var symtabEntryAddress = symtabAddress + symbolIndex * symtabEntrySize;
-                    symbolEntry = _mappedExecutable.ReadObject<SymbolEntry>(symtabEntryAddress, default);
+                    symbolEntry = _mappedExecutable.ReadObject<SymbolEntry>(ImageBase + symtabEntryAddress, default);
                     symbolCache[symbolIndex] = symbolEntry;
                 }
 
@@ -305,7 +313,7 @@ public class NsoReader : FileFormatStream<NsoReader>
 
                 if (handled)
                 {
-                    _mappedExecutable.WriteNUInt(offset, value);
+                    _mappedExecutable.WriteNUInt(ImageBase + offset, ImageBase + value);
                 }
                 else
                 {
@@ -314,24 +322,39 @@ public class NsoReader : FileFormatStream<NsoReader>
             }
         }
 
-        List<(ulong, ulong, long?)> ParseRelSection(ulong address, ulong size)
+        List<(ulong, ulong, long?)> ParseRelSection(ulong rva, ulong size)
         {
             var entrySize = _dynamicEntries[DynamicTag.DT_RELENT];
             var entryCount = size / entrySize;
 
-            return _mappedExecutable.ReadObjectArray<RelEntry>(address, checked((int)entryCount), default)
-                .Select<RelEntry, (ulong, ulong, long?)>(x => (x.Offset, x.Info, null))
-                .ToList();
+            return [.. _mappedExecutable.ReadObjectArray<RelEntry>(ImageBase + rva, checked((int)entryCount), default)
+                .Select<RelEntry, (ulong, ulong, long?)>(x => (x.Offset, x.Info, null))];
         }
 
-        List<(ulong, ulong, long?)> ParseRelaSection(ulong address, ulong size)
+        List<(ulong, ulong, long?)> ParseRelaSection(ulong rva, ulong size)
         {
             var entrySize = _dynamicEntries[DynamicTag.DT_RELAENT];
             var entryCount = size / entrySize;
 
-            return _mappedExecutable.ReadObjectArray<RelaEntry>(address, checked((int)entryCount), default)
-                .Select<RelaEntry, (ulong, ulong, long?)>(x => (x.Offset, x.Info, x.Addend))
-                .ToList();
+            return [.. _mappedExecutable.ReadObjectArray<RelaEntry>(ImageBase + rva, checked((int)entryCount), default)
+                .Select<RelaEntry, (ulong, ulong, long?)>(x => (x.Offset, x.Info, x.Addend))];
         }
     }
+
+    public override uint[] GetFunctionTable() => [];
+
+    public override bool TryMapVATR(ulong uiAddr, out uint fileOffset)
+    {
+        if (uiAddr < ImageBase)
+        {
+            fileOffset = 0;
+            return false;
+        }
+
+        fileOffset = checked((uint)(uiAddr - ImageBase));
+        return true;
+    }
+
+    public override ulong MapFileOffsetToVA(uint offset)
+        => ImageBase + offset;
 }
