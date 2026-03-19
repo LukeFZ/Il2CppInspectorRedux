@@ -334,7 +334,7 @@ namespace Il2CppInspector
                     // If a module contains only interfaces, abstract methods and/or non-concrete generic methods,
                     // the entire method pointer array will be NULL values, causing the methodPointer to be mapped to .bss
                     // and therefore out of scope of the binary image
-                    if (Image.TryMapVATR(module.MethodPointers, out _))
+                    if (module.MethodPointers != 0 && Image.TryMapVATR(module.MethodPointers, out _))
                     {
                         try
                         {
@@ -351,7 +351,7 @@ namespace Il2CppInspector
                     }
 
                     // Read method invoker pointer indices - one per method
-                    if (Image.TryMapVATR(module.InvokerIndices, out _))
+                    if (module.InvokerIndices != 0 && Image.TryMapVATR(module.InvokerIndices, out _))
                     {
                         try
                         {
