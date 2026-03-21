@@ -294,7 +294,8 @@ namespace Il2CppInspector
                     var mr = Image.ReadMappedVersionedObject<Il2CppMetadataRegistration>(va);
                     if (mr.TypeDefinitionsSizesCount == metadata.Types.Length
                         && mr.FieldOffsetsCount == metadata.Types.Length
-                        && mr is { GenericInstsCount: > 0, GenericClassesCount: > 0 })
+                        && mr is { GenericInstsCount: > 0, GenericClassesCount: > 0 }
+                        && Image.TryMapVATR(mr.FieldOffsets, out _))
                     {
                         metadataRegistration = va;
                         break;
