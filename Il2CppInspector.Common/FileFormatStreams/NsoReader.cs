@@ -8,6 +8,8 @@ using System.Collections.Frozen;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using VersionedSerialization;
 
 namespace Il2CppInspector;
@@ -82,6 +84,17 @@ internal class ByteArrayBackingBuffer : IDisposable
                 .ReadPrimitive<T>()
             : Reader.BigEndian(Data, TranslateVaToRva(address), new ReaderConfig(Is32Bit))
                 .ReadPrimitive<T>();
+    }
+
+    public ImmutableArray<T> ReadPrimitiveArray<T>(ulong address, long count) where T : unmanaged
+    {
+        Debug.Assert(Initialized);
+
+        return IsLittleEndian
+            ? Reader.LittleEndian(Data, TranslateVaToRva(address), new ReaderConfig(Is32Bit))
+                .ReadPrimitiveArray<T>(count)
+            : Reader.BigEndian(Data, TranslateVaToRva(address), new ReaderConfig(Is32Bit))
+                .ReadPrimitiveArray<T>(count);
     }
 
     public void WriteNUInt(ulong address, ulong value)
@@ -269,6 +282,13 @@ public class NsoReader : FileFormatStream<NsoReader>
             relocationRegions.Add((jmprelAddress, jmprelAddress + size));
         }
 
+        if (_dynamicEntries.TryGetValue(DynamicTag.DT_RELR, out var relrAddress))
+        {
+            var size = _dynamicEntries[DynamicTag.DT_RELRSZ];
+            ApplyRelrRelocations(relrAddress, size);
+            relocationRegions.Add((relrAddress, relrAddress + size));
+        }
+
         _relocationEntryRegions = [.. relocationRegions];
 
         // Clear out relocation sections in memory so searching is faster
@@ -339,6 +359,64 @@ public class NsoReader : FileFormatStream<NsoReader>
             return [.. _mappedExecutable.ReadObjectArray<RelaEntry>(ImageBase + rva, checked((int)entryCount), default)
                 .Select<RelaEntry, (ulong, ulong, long?)>(x => (x.Offset, x.Info, x.Addend))];
         }
+
+        void ApplyRelrRelocations(ulong address, ulong size)
+        {
+            if (Is32Bit)
+            {
+                ApplyRelrRelocationsImpl<uint>();
+            }
+            else
+            {
+                ApplyRelrRelocationsImpl<ulong>();
+            }
+
+            return;
+
+            void ApplyRelrRelocationsImpl<T>() where T : unmanaged, IUnsignedNumber<T>, IBinaryNumber<T>
+            {
+                Debug.Assert(typeof(T) == typeof(uint) || typeof(T) == typeof(ulong));
+
+                var entrySize = _dynamicEntries[DynamicTag.DT_RELRENT];
+                var entryCount = size / entrySize;
+                Debug.Assert(entrySize == (uint)Unsafe.SizeOf<T>());
+
+                var relrWords = _mappedExecutable.ReadPrimitiveArray<T>(ImageBase + address, checked((int)entryCount));
+
+                var baseAddr = 0ul;
+                for (int i = 0; i < relrWords.Length; i++)
+                {
+                    var word = ulong.CreateChecked(relrWords[i]);
+                    ulong offset;
+
+                    if ((word & 1) == 0)
+                    {
+                        offset = word;
+                        var value = ulong.CreateChecked(_mappedExecutable.ReadPrimitive<T>(ImageBase + offset));
+                        _mappedExecutable.WriteNUInt(ImageBase + offset, ImageBase + value);
+                        baseAddr = offset + entrySize;
+                    }
+                    else
+                    {
+                        offset = baseAddr;
+                        while (word != 0)
+                        {
+                            word >>= 1;
+
+                            if ((word & 1) != 0)
+                            {
+                                var value = ulong.CreateChecked(_mappedExecutable.ReadPrimitive<T>(ImageBase + offset));
+                                _mappedExecutable.WriteNUInt(ImageBase + offset, ImageBase + value);
+                            }
+
+                            offset += entrySize;
+                        }
+
+                        baseAddr += (8 * entrySize - 1) * entrySize;
+                    }
+                }
+            }
+        }
     }
 
     public override uint[] GetFunctionTable() => [];
@@ -352,6 +430,11 @@ public class NsoReader : FileFormatStream<NsoReader>
         }
 
         fileOffset = checked((uint)(uiAddr - ImageBase));
+        if (fileOffset > Length)
+        {
+            return false;
+        }
+
         return true;
     }
 

@@ -136,6 +136,9 @@ public enum DynamicTag : long
     DT_SYMENT = 0xb,
     DT_INIT = 0xC,
     DT_FINI = 0xD,
+    DT_SONAME = 0xe,
+    DT_RPATH = 0xf,
+    DT_SYMBOLIC = 0x10,
     DT_REL = 0x11,
     DT_RELSZ = 0x12,
     DT_RELENT = 0x13,
@@ -152,11 +155,19 @@ public enum DynamicTag : long
     DT_FLAGS = 0x1E,
     DT_PREINIT_ARRAY = 0x20,
     DT_PREINIT_ARRAYSZ = 0x21,
+    DT_MAXPOSTAGS = 0x22,
+    DT_RELRSZ = 0x23,
+    DT_RELR = 0x24,
+    DT_RELRENT = 0x25,
     DT_LOOS = 0x6000000D,
     DT_ANDROID_REL = DT_LOOS + 2,
     DT_ANDROID_RELSZ = DT_LOOS + 3,
     DT_ANDROID_RELA = DT_LOOS + 4,
-    DT_ANDROID_RELASZ = DT_LOOS + 5
+    DT_ANDROID_RELASZ = DT_LOOS + 5,
+    DT_ANDROID_RELR = 0x6fffe000,
+    DT_ANDROID_RELRSZ = 0x6fffe001,
+    DT_ANDROID_RELRENT = 0x6fffe003,
+    DT_ANDROID_RELRCOUNT = 0x6fffe005,
 }
 
 public struct SymbolEntry : IReadable
