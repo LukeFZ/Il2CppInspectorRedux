@@ -585,6 +585,9 @@ namespace Il2CppInspector.Outputs
                     case CustomAttributeArgument[] argumentArray:
                         return new CAArgument(new SZArraySig(typeSig),
                             argumentArray.Select(GetArgument).ToList());
+                    // Needed for nested arrays
+                    case CustomAttributeArgument nestedArgument:
+                        return GetArgument(nestedArgument);
                     default:
                         return new CAArgument(typeSig, argument.Value);
                 }
