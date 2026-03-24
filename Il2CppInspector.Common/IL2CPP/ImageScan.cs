@@ -287,6 +287,10 @@ namespace Il2CppInspector
             // On some 32-bit (arm) binaries, just checking fields with the type count is not sufficient
             // for uniquely identifying the metareg. We assume that all binaries have at least one generic class + inst
             // and use this for an additional heuristic, though this is kinda jank and might not be enough for all binaries
+
+            // As of v27 metadata usages are no longer set in the metareg, so the count should always be zero.
+            // TODO: Mapping ELF binaries at a higher base address will hopefully reduce erroneous detections.
+
             if (Image.Version >= MetadataVersions.V190)
             {
                 foreach (var va in vas)
@@ -295,7 +299,8 @@ namespace Il2CppInspector
                     if (mr.TypeDefinitionsSizesCount == metadata.Types.Length
                         && mr.FieldOffsetsCount == metadata.Types.Length
                         && mr is { GenericInstsCount: > 0, GenericClassesCount: > 0 }
-                        && Image.TryMapVATR(mr.FieldOffsets, out _))
+                        && Image.TryMapVATR(mr.FieldOffsets, out _)
+                        && (Image.Version < MetadataVersions.V270 || mr.MetadataUsagesCount == 0))
                     {
                         metadataRegistration = va;
                         break;
