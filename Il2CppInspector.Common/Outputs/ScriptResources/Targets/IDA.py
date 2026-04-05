@@ -11,6 +11,7 @@ import ida_segment
 import ida_funcs
 import ida_xref
 import ida_pro
+import itertools
 
 if ida_pro.IDA_SDK_VERSION > 770:
     import ida_srclang
@@ -88,12 +89,12 @@ class IDADisassemblerInterface(BaseDisassemblerInterface):
         ida_ida.inf_set_genflags(self._cached_genflags & ~ida_ida.INFFL_AUTO)
 
         # Unload type libraries we know to cause issues - like the c++ linux one
-        PLATFORMS = ["x86", "x64", "arm", "arm64", "win7"]
-        PROBLEMATIC_TYPELIBS = ["gnulnx", "mssdk64"]
+        PROBLEMATIC_LINUX_TYPELIBS = [f"gnulnx_{x}" for x in ["x86", "x64", "arm", "arm64"]]
+        PROBLEMATIC_WINDOWS_TYPELIBS = ["_".join(x) for x in itertools.product(["mssdk64", "mssdk"], ["2000", "nt", "vista", "win10", "win7", "win8", "win81", "ws03", "xp"])]
+        PROBLEMATIC_TYPELIBS = PROBLEMATIC_LINUX_TYPELIBS + PROBLEMATIC_WINDOWS_TYPELIBS
 
         for lib in PROBLEMATIC_TYPELIBS:
-            for platform in PLATFORMS:
-                ida_typeinf.del_til(f"{lib}_{platform}")
+            ida_typeinf.del_til(lib)
 
         # Set name mangling to GCC 3.x and display demangled as default
         ida_ida.inf_set_demnames(ida_ida.DEMNAM_GCC3 | ida_ida.DEMNAM_NAME)
