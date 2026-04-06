@@ -246,7 +246,7 @@ class ScriptContext:
             if self._backend.supports_fake_string_segment:
                 total_string_length = 0
                 for d in metadata["stringLiterals"]:
-                    total_string_length += len(d["string"]) + 1
+                    total_string_length += len(d["string"].encode("utf-8")) + 1
 
                 aligned_length = total_string_length + (
                     4096 - (total_string_length % 4096)
