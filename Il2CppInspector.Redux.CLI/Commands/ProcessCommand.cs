@@ -109,11 +109,12 @@ internal sealed class ProcessCommand(PortProvider portProvider) : ManualCommand<
             await client.WaitForLoadingToFinishAsync();
         }
 
+        var outputPath = settings.OutputPath ?? Directory.GetCurrentDirectory();
         var unityVersions = await client.GetPotentialUnityVersions();
 
         if (settings.CppScaffolding)
         {
-            var directory = Path.Join(settings.OutputPath, "cpp");
+            var directory = Path.Join(outputPath, "cpp");
             await client.QueueExport(CppScaffoldingOutput.Id, directory, new Dictionary<string, string>
             {
                 ["unityversion"] = settings.UnityVersion ?? unityVersions.First(),
@@ -123,7 +124,7 @@ internal sealed class ProcessCommand(PortProvider portProvider) : ManualCommand<
 
         if (settings.CSharpStubs)
         {
-            var directory = Path.Join(settings.OutputPath, "cs");
+            var directory = Path.Join(outputPath, "cs");
             await client.QueueExport(CSharpStubOutput.Id, directory, new Dictionary<string, string>
             {
                 ["layout"] = settings.Layout.ToString(),
@@ -137,7 +138,7 @@ internal sealed class ProcessCommand(PortProvider portProvider) : ManualCommand<
 
         if (settings.DisassemblerMetadata)
         {
-            await client.QueueExport(DisassemblerMetadataOutput.Id, settings.OutputPath, 
+            await client.QueueExport(DisassemblerMetadataOutput.Id, outputPath, 
                 new Dictionary<string, string>
             {
                 ["disassembler"] = settings.Disassembler.ToString(),
@@ -147,7 +148,7 @@ internal sealed class ProcessCommand(PortProvider portProvider) : ManualCommand<
 
         if (settings.DummyDlls)
         {
-            var directory = Path.Join(settings.OutputPath, "dll");
+            var directory = Path.Join(outputPath, "dll");
             await client.QueueExport(DummyDllOutput.Id, directory, new Dictionary<string, string>
             {
                 ["suppressmetadata"] = settings.SuppressMetadata.ToString()
@@ -156,7 +157,7 @@ internal sealed class ProcessCommand(PortProvider portProvider) : ManualCommand<
 
         if (settings.VsSolution)
         {
-            var directory = Path.Join(settings.OutputPath, "vs");
+            var directory = Path.Join(outputPath, "vs");
             await client.QueueExport(VsSolutionOutput.Id, directory, new Dictionary<string, string>
             {
                 ["unitypath"] = settings.UnityPath ?? "",

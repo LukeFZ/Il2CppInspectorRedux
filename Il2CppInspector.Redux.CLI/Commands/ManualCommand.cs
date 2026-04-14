@@ -13,7 +13,7 @@ internal abstract class ManualCommand<T>(PortProvider portProvider) : BaseComman
                 return ValidationResult.Error($"Provided input path {inputPath} does not exit.");
         }
 
-        if (File.Exists(settings.OutputPath))
+        if (settings.OutputPath != null && File.Exists(settings.OutputPath))
             return ValidationResult.Error("Provided output path already exists as a file.");
 
         return ValidationResult.Success();

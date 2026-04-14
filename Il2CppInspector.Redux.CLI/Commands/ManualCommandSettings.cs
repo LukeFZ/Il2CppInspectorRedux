@@ -11,5 +11,5 @@ internal class ManualCommandSettings : CommandSettings
 
     [CommandOption("-o|--output")]
     [Description("Path to the output folder")]
-    public string OutputPath { get; init; } = "";
+    public string? OutputPath { get; init; }
 }
