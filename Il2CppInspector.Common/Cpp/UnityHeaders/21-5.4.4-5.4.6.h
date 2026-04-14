@@ -1693,7 +1693,7 @@ struct Il2CppDecimal
   } s2;
   uint64_t lo64;
  } u2;
-} Il2CppClass;
+} Il2CppDecimal;
 typedef int16_t IL2CPP_VARIANT_BOOL;
 typedef enum Il2CppVarType
 {
