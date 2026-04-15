@@ -7,9 +7,14 @@ using Il2CppInspector.Reflection;
 namespace Il2CppInspector.Cpp;
 
 // This follows Itanium/GCC mangling specifications.
-public class MangledNameBuilder
+public partial class MangledNameBuilder
 {
     private readonly StringBuilder _sb = new("_Z");
+    private readonly Dictionary<TypeInfo, int> _substitutionMap = [];
+    private int _currentSubstitutionIndex;
+
+    [GeneratedRegex("[^a-zA-Z0-9_]")]
+    private static partial Regex Gcc { get; }
 
     public override string ToString()
         => _sb.ToString();
@@ -31,21 +36,70 @@ public class MangledNameBuilder
     public static string TypeInfo(TypeInfo type)
     {
         var builder = new MangledNameBuilder();
-        builder.BeginName();
-        builder.WriteIdentifier("TypeInfo");
-        builder.WriteTypeName(type);
-        builder.WriteEnd();
+        builder.BuildData(type, "TypeInfo");
         return builder.ToString();
     }
 
     public static string TypeRef(TypeInfo type)
     {
         var builder = new MangledNameBuilder();
-        builder.BeginName();
-        builder.WriteIdentifier("TypeRef");
-        builder.WriteTypeName(type);
-        builder.WriteEnd();
+        builder.BuildData(type, "TypeRef");
         return builder.ToString();
+    }
+
+    private static ReadOnlySpan<char> Base36Alphabet => "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    private bool TryWriteSubstitution(TypeInfo obj)
+    {
+        if (!_substitutionMap.TryGetValue(obj, out var index))
+            return false;
+
+        _sb.Append('S');
+
+        if (index > 0)
+        {
+            index -= 1; // The first one uses 'S_', the next one 'S0_', etc.
+
+            var buffer = (stackalloc char[8]);
+            var offset = buffer.Length;
+
+            while (index > 0)
+            {
+                buffer[--offset] = Base36Alphabet[index % 36];
+                index /= 36;
+            }
+
+            _sb.Append(buffer[offset..]);
+        }
+        _sb.Append('_');
+
+        return true;
+    }
+
+    private void RegisterSubstitution(TypeInfo obj)
+    {
+        _substitutionMap[obj] = _currentSubstitutionIndex++;
+    }
+
+    private void SkipSubstitutionIndex()
+    {
+        _currentSubstitutionIndex++;
+    }
+
+    private void BuildData(TypeInfo type, string prefix = "")
+    {
+        BeginName();
+
+        if (prefix.Length > 0)
+        {
+            WriteIdentifier(prefix);
+            SkipSubstitutionIndex();
+        }
+
+        WriteTypeName(type);
+        RegisterSubstitution(type);
+
+        WriteEnd();
     }
 
     private void BuildMethod(MethodBase method, string prefix = "")
@@ -58,9 +112,13 @@ public class MangledNameBuilder
         BeginName();
 
         if (prefix.Length > 0)
+        {
             WriteIdentifier(prefix);
+            SkipSubstitutionIndex();
+        }
 
         WriteTypeName(method.DeclaringType);
+        RegisterSubstitution(method.DeclaringType);
 
         switch (method.Name)
         {
@@ -77,7 +135,11 @@ public class MangledNameBuilder
 
         var genericParams = method.GetGenericArguments();
 
-        WriteGenericParams(genericParams);
+        if (genericParams.Length > 0)
+        {
+            SkipSubstitutionIndex();
+            WriteGenericParams(genericParams);
+        }
 
         WriteEnd(); // End nested name
 
@@ -90,12 +152,16 @@ public class MangledNameBuilder
         }
 
         if (method.DeclaredParameters.Count == 0)
+        {
             _sb.Append('v');
+        }
         else
         {
             foreach (var param in method.DeclaredParameters)
                 WriteType(param.ParameterType);
         }
+
+        SkipSubstitutionIndex();
     }
 
     private void WriteTypeName(TypeInfo type)
@@ -103,13 +169,28 @@ public class MangledNameBuilder
         if (type.HasElementType)
             type = type.ElementType;
 
-        WriteName(type.Namespace);
+        foreach (var part in type.Namespace.Split("."))
+        {
+            if (part.Length > 0)
+            {
+                WriteIdentifier(part);
+                SkipSubstitutionIndex();
+            }
+        }
 
         if (type.DeclaringType != null)
+        {
             WriteIdentifier(type.DeclaringType.Name);
+            SkipSubstitutionIndex();
+        }
 
         WriteIdentifier(type.CSharpBaseName);
-        WriteGenericParams(type.GenericTypeArguments);
+
+        if (type.GenericTypeArguments.Length > 0)
+        {
+            SkipSubstitutionIndex();
+            WriteGenericParams(type.GenericTypeArguments);
+        }
     }
 
     private void WriteType(TypeInfo type)
@@ -120,19 +201,32 @@ public class MangledNameBuilder
             return;
         }
 
+        var isNestedTypeElement = false;
+
         if (type.IsByRef)
+        {
             _sb.Append('R');
+            isNestedTypeElement = true;
+        }
 
         if (type.IsPointer)
+        {
             _sb.Append('P');
+            isNestedTypeElement = true;
+        }
 
         if (type.IsArray)
+        {
             _sb.Append("A_");
+            isNestedTypeElement = true;
+        }
 
         if (type.IsPrimitive && type.Name != "Decimal")
         {
             if (type.Name is "IntPtr" or "UIntPtr")
+            {
                 _sb.Append("Pv"); // void*
+            }
             else
             {
                 _sb.Append(type.Name switch
@@ -155,40 +249,40 @@ public class MangledNameBuilder
         }
         else
         {
-            BeginName();
-            WriteTypeName(type);
-            WriteEnd();
+            if (!TryWriteSubstitution(type))
+            {
+                BeginName();
+                WriteTypeName(type);
+                WriteEnd();
+
+                RegisterSubstitution(type);
+            }
+        }
+
+        if (isNestedTypeElement)
+        {
+            SkipSubstitutionIndex();
         }
     }
 
     private void WriteGenericParams(TypeInfo[] generics)
     {
-        if (generics.Length > 0)
+        BeginGenerics();
+
+        foreach (var arg in generics)
         {
-            BeginGenerics();
-
-            foreach (var arg in generics)
-                WriteType(arg);
-
-            WriteEnd();
+            WriteType(arg);
         }
+
+        WriteEnd();
     }
 
     private void WriteIdentifier(string identifier)
     {
-        identifier = MangledRegex.Gcc.Replace(identifier, "_");
+        identifier = Gcc.Replace(identifier, "_");
 
         _sb.Append(identifier.Length);
         _sb.Append(identifier);
-    }
-
-    private void WriteName(string name)
-    {
-        foreach (var part in name.Split("."))
-        {
-            if (part.Length > 0)
-                WriteIdentifier(part);
-        }
     }
 
     private void BeginName()
@@ -205,21 +299,4 @@ public class MangledNameBuilder
     {
         _sb.Append('E');
     }
-}
-
-internal static partial class MangledRegex
-{
-    public static Regex Gcc
-    {
-        get
-        {
-            _gcc ??= GccNameRegex();
-            return _gcc;
-        }
-    }
-
-    private static Regex? _gcc;
-
-    [GeneratedRegex("[^a-zA-Z0-9_]")]
-    public static partial Regex GccNameRegex();
 }
