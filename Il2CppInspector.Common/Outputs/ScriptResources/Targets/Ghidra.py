@@ -11,6 +11,7 @@ from ghidra.app.util.demangler.gnu import (  # type: ignore
     GnuDemanglerFormat,
 )
 from ghidra.util.classfinder import ClassSearcher
+from ghidra.util.exception import DuplicateNameException
 from ghidra.program.model.address import Address
 from java.lang import Long
 
@@ -199,7 +200,47 @@ class GhidraDisassemblerInterface(BaseDisassemblerInterface):
             RefType.DATA,
             SourceType.USER_DEFINED,
             0,
-        )
+        )    def _get_or_create_namespace(self, group_str: str):
+        if not group_str:
+            return currentProgram.getGlobalNamespace()
+
+        sym_table = currentProgram.getSymbolTable()
+        current_ns = currentProgram.getGlobalNamespace()
+
+        for part in group_str.split("/"):
+            if not part:
+                continue
+            ns = sym_table.getNamespace(part, current_ns)
+            if ns is None:
+                try:
+                    ns = sym_table.createNameSpace(current_ns, part, SourceType.USER_DEFINED)
+                except DuplicateNameException:
+                    ns = sym_table.getNamespace(part, current_ns)
+            current_ns = ns
+        return current_ns
+
+    def add_function_to_group(self, address: int, group: str):
+        if not group:
+            return
+            
+        addr = self._to_address(address)
+        target_ns = self._get_or_create_namespace(group)
+        
+        func = getFunctionAt(addr)
+        if func is not None:
+            try:
+                func.setParentNamespace(target_ns)
+            except Exception as e:
+                pass
+        else:
+            sym_table = currentProgram.getSymbolTable()
+            symbols = sym_table.getSymbols(addr)
+            if symbols.hasNext():
+                sym = symbols.next()
+                try:
+                    sym.setNamespace(target_ns)
+                except Exception:
+                    pass
 
     def import_c_typedef(self, type_def: str):
         # Code declarations are not supported in Ghidra
