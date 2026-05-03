@@ -2,7 +2,13 @@
 from ghidra.app.cmd.function import ApplyFunctionSignatureCmd
 from ghidra.app.util.cparser.C import CParserUtils
 from ghidra.program.model.data import ArrayDataType
-from ghidra.program.model.symbol import SourceType, RefType, SymbolUtilities
+from ghidra.program.model.symbol import (
+    SourceType,
+    RefType,
+    SymbolUtilities,
+    Namespace,
+    SymbolTable,
+)
 from ghidra.app.services import DataTypeManagerService
 from ghidra.app.util.demangler import Demangler, DemangledException
 from ghidra.app.util.demangler.gnu import (  # type: ignore
@@ -52,6 +58,9 @@ class GhidraDisassemblerInterface(BaseDisassemblerInterface):
     _demangler: Demangler
     _demangler_options: GnuDemanglerOptions
 
+    _symbol_table: SymbolTable
+    _cached_namespaces: dict[str, Namespace]
+
     def __init__(self):
         # Inspector always emits Itanium mangled symbols, but Ghidra does not
         # normally allow demangling them on Windows binaries. Because of this,
@@ -69,8 +78,12 @@ class GhidraDisassemblerInterface(BaseDisassemblerInterface):
         self._demangler_options.setDoDisassembly(False)
         self._demangler_options.setDemangleOnlyKnownPatterns(False)
 
+        self._global_namespace = currentProgram.getGlobalNamespace()
+        self._symbol_table = currentProgram.getSymbolTable()
+        self._cached_namespaces = {}
+
     def _to_address(self, value: int) -> Address:
-        return toAddr(Long(value))
+        return toAddr(Long(value))  # type: ignore
 
     def _demangle_symbol(self, symbol: str) -> str | None:
         ctx = self._demangler.createMangledContext(
@@ -95,7 +108,7 @@ class GhidraDisassemblerInterface(BaseDisassemblerInterface):
         return None
 
     def get_script_directory(self) -> str:
-        return getSourceFile().getParentFile().toString()
+        return getSourceFile().getParentFile().toString()  # type: ignore
 
     def on_start(self):
         self.xrefs = currentProgram.getReferenceManager()
@@ -130,7 +143,7 @@ class GhidraDisassemblerInterface(BaseDisassemblerInterface):
         fn = getFunctionAt(addr)
         if fn is None:
             # Create new function if none exists
-            createFunction(addr, None)
+            createFunction(addr, None)  # type: ignore
 
     def define_data_array(self, address: int, type: str, count: int):
         if type.startswith("struct "):
@@ -200,47 +213,49 @@ class GhidraDisassemblerInterface(BaseDisassemblerInterface):
             RefType.DATA,
             SourceType.USER_DEFINED,
             0,
-        )    def _get_or_create_namespace(self, group_str: str):
-        if not group_str:
-            return currentProgram.getGlobalNamespace()
+        )
 
-        sym_table = currentProgram.getSymbolTable()
-        current_ns = currentProgram.getGlobalNamespace()
+    def _get_or_create_namespace(self, group_str: str) -> Namespace:
+        if group_str == "":
+            return self._global_namespace
+
+        if (
+            cached_namespace := self._cached_namespaces.get(group_str, None)
+        ) is not None:
+            return cached_namespace
+
+        current_ns = self._global_namespace
 
         for part in group_str.split("/"):
-            if not part:
+            if part == "":
                 continue
-            ns = sym_table.getNamespace(part, current_ns)
+
+            ns = self._symbol_table.getNamespace(part, current_ns)
+
             if ns is None:
-                try:
-                    ns = sym_table.createNameSpace(current_ns, part, SourceType.USER_DEFINED)
-                except DuplicateNameException:
-                    ns = sym_table.getNamespace(part, current_ns)
+                ns = self._symbol_table.createNameSpace(
+                    current_ns, part, SourceType.USER_DEFINED
+                )
+
             current_ns = ns
+
+        self._cached_namespaces[group_str] = current_ns
+
         return current_ns
 
     def add_function_to_group(self, address: int, group: str):
-        if not group:
+        if group == "":
             return
-            
+
         addr = self._to_address(address)
         target_ns = self._get_or_create_namespace(group)
-        
+
         func = getFunctionAt(addr)
         if func is not None:
-            try:
-                func.setParentNamespace(target_ns)
-            except Exception as e:
-                pass
+            func.setParentNamespace(target_ns)
         else:
-            sym_table = currentProgram.getSymbolTable()
-            symbols = sym_table.getSymbols(addr)
-            if symbols.hasNext():
-                sym = symbols.next()
-                try:
-                    sym.setNamespace(target_ns)
-                except Exception:
-                    pass
+            for x in self._symbol_table.getSymbolsAsIterator(addr):
+                x.setNamespace(target_ns)
 
     def import_c_typedef(self, type_def: str):
         # Code declarations are not supported in Ghidra
