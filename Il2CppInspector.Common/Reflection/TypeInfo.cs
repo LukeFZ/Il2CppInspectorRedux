@@ -416,6 +416,11 @@ namespace Il2CppInspector.Reflection
                         n = DeclaringType.FullName + "+" + n;
                     else if (Namespace.Length > 0)
                         n = Namespace + "." + n;
+
+                    var ga = GetGenericArguments();
+                    if (ga.Any())
+                        n += "[" + string.Join(",", ga.Select(x => x.Namespace != Namespace ? x.FullName ?? x.Name : x.Name)) + "]";
+
                     return n;
                 }
             }
