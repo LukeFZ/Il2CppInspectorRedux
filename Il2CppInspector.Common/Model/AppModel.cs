@@ -13,6 +13,7 @@ using Aron.Weiler;
 using Il2CppInspector.Cpp;
 using Il2CppInspector.Cpp.UnityHeaders;
 using Il2CppInspector.Next;
+using Il2CppInspector.Next.Metadata;
 using Il2CppInspector.Reflection;
 using Spectre.Console;
 
@@ -216,12 +217,12 @@ namespace Il2CppInspector.Model
                     var address = usage.VirtualAddress;
 
                     switch (usage.Type) {
-                        case MetadataUsageType.StringLiteral:
+                        case Il2CppMetadataUsageType.StringLiteral:
                             var str = TypeModel.GetMetadataUsageName(usage);
                             Strings.Add(address, str);
                             break;
 
-                        case MetadataUsageType.Type or MetadataUsageType.TypeInfo:
+                        case Il2CppMetadataUsageType.Il2CppType or Il2CppMetadataUsageType.TypeInfo:
                             var type = TypeModel.GetMetadataUsageType(usage);
                             declarationGenerator.IncludeType(type);
                             AddTypes(declarationGenerator.GenerateRemainingTypeDeclarations());
@@ -230,7 +231,7 @@ namespace Il2CppInspector.Model
                                 // Generic type definition has no associated C++ type, therefore no dictionary sub-key
                                 Types.Add(type, new AppType(type, null) { Group = Group });
 
-                            if (usage.Type == MetadataUsageType.TypeInfo)
+                            if (usage.Type == Il2CppMetadataUsageType.TypeInfo)
                                 // Regular type definition
                                 Types[type].TypeClassAddress = address;
                             else
@@ -238,7 +239,7 @@ namespace Il2CppInspector.Model
                                 Types[type].TypeRefPtrAddress = address;
 
                             break;
-                        case MetadataUsageType.MethodDef or MetadataUsageType.MethodRef:
+                        case Il2CppMetadataUsageType.MethodDef or Il2CppMetadataUsageType.MethodRef:
                             var method = TypeModel.GetMetadataUsageMethod(usage);
 
                             declarationGenerator.IncludeMethod(method);
@@ -266,7 +267,7 @@ namespace Il2CppInspector.Model
 
                         // FieldInfo is used for array initializers.
                         // FieldRva is used for span initializers.
-                        case MetadataUsageType.FieldInfo or MetadataUsageType.FieldRva:
+                        case Il2CppMetadataUsageType.FieldInfo or Il2CppMetadataUsageType.FieldRva:
                             var fieldRef = TypeModel.Package.FieldRefs[usage.SourceIndex];
                             var fieldType = TypeModel.GetMetadataUsageType(usage);
                             var field = fieldType.DeclaredFields.First(f => f.Index == fieldType.Definition.FieldIndex + fieldRef.FieldIndex);
@@ -277,7 +278,7 @@ namespace Il2CppInspector.Model
                                 : "";
 
 
-                            if (usage.Type == MetadataUsageType.FieldInfo)
+                            if (usage.Type == Il2CppMetadataUsageType.FieldInfo)
                                 Fields[usage.VirtualAddress] = (field, value);
                             else
                                 FieldRvas[usage.VirtualAddress] = (field, value);

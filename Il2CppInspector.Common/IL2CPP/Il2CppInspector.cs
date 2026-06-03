@@ -164,11 +164,11 @@ namespace Il2CppInspector
             {
                 return usage.Type switch
                 {
-                    MetadataUsageType.TypeInfo or MetadataUsageType.Type => TypeReferences.Length > usage.SourceIndex,
-                    MetadataUsageType.MethodDef => Methods.Length > usage.SourceIndex,
-                    MetadataUsageType.FieldInfo or MetadataUsageType.FieldRva => FieldRefs.Length > usage.SourceIndex,
-                    MetadataUsageType.StringLiteral => StringLiterals.Length > usage.SourceIndex,
-                    MetadataUsageType.MethodRef => MethodSpecs.Length > usage.SourceIndex,
+                    Il2CppMetadataUsageType.TypeInfo or Il2CppMetadataUsageType.Il2CppType => TypeReferences.Length > usage.SourceIndex,
+                    Il2CppMetadataUsageType.MethodDef => Methods.Length > usage.SourceIndex,
+                    Il2CppMetadataUsageType.FieldInfo or Il2CppMetadataUsageType.FieldRva => FieldRefs.Length > usage.SourceIndex,
+                    Il2CppMetadataUsageType.StringLiteral => StringLiterals.Length > usage.SourceIndex,
+                    Il2CppMetadataUsageType.MethodRef => MethodSpecs.Length > usage.SourceIndex,
                     _ => false,
                 };
             }

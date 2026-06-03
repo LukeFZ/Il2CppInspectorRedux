@@ -7,53 +7,29 @@
 */
 
 using Il2CppInspector.Next;
+using Il2CppInspector.Next.Metadata;
 
 namespace Il2CppInspector
 {
-    public enum MetadataUsageType
+    public record struct MetadataUsage(Il2CppMetadataUsageType Type, int SourceIndex, ulong VirtualAddress = 0)
     {
-        TypeInfo = 1,
-        Type = 2,
-        MethodDef = 3,
-        FieldInfo = 4,
-        StringLiteral = 5,
-        MethodRef = 6,
-        FieldRva = 7
-    }
-
-    public record struct MetadataUsage
-    {
-        public MetadataUsageType Type { get; }
-        public int SourceIndex { get; }
-        public ulong VirtualAddress { get; }
+        public Il2CppMetadataUsageType Type { get; } = Type;
+        public int SourceIndex { get; } = SourceIndex;
+        public ulong VirtualAddress { get; } = VirtualAddress;
 
         public readonly bool IsValid => Type != 0;
 
-        public MetadataUsage(MetadataUsageType type, int sourceIndex, ulong virtualAddress = 0) {
-            Type = type;
-            SourceIndex = sourceIndex;
-            VirtualAddress = virtualAddress;
-        }
-
-        public static MetadataUsage FromEncodedIndex(Il2CppInspector package, uint encodedIndex, ulong virtualAddress = 0) {
-            uint index;
-            MetadataUsageType usageType;
-            if (package.Version < MetadataVersions.V190) {
-                /* These encoded indices appear only in vtables, and are decoded by IsGenericMethodIndex/GetDecodedMethodIndex */
-                var isGeneric = encodedIndex & 0x80000000;
-                index = package.Binary.VTableMethodReferences[(int)(encodedIndex & 0x7FFFFFFF)];
-                usageType = (isGeneric != 0) ? MetadataUsageType.MethodRef : MetadataUsageType.MethodDef;
-            } else {
-                /* These encoded indices appear in metadata usages, and are decoded by GetEncodedIndexType/GetDecodedMethodIndex */
-                var encodedType = encodedIndex & 0xE0000000;
-                usageType = (MetadataUsageType)(encodedType >> 29);
-                index = encodedIndex & 0x1FFFFFFF;
-
-                // From v27 the bottom bit is set to indicate the usage token hasn't been replaced with a pointer at runtime yet
-                if (package.Version >= MetadataVersions.V270)
-                    index >>= 1;
+        public static MetadataUsage FromEncodedIndex(Il2CppInspector package, uint encodedIndex, ulong virtualAddress = 0)
+        {
+            var usage = Il2CppMetadataUsage.FromValue(package.Version, encodedIndex);
+            if (package.Version >= MetadataVersions.V190)
+            {
+                return new MetadataUsage(usage.Type, (int)usage.Index, virtualAddress);
             }
-            return new MetadataUsage(usageType, (int)index, virtualAddress);
+
+            /* These encoded indices appear only in vtables, and are decoded by IsGenericMethodIndex/GetDecodedMethodIndex */
+            var index = package.Binary.VTableMethodReferences[(int)usage.Index];
+            return new MetadataUsage(usage.Type, (int)index, virtualAddress);
         }
     }
 }

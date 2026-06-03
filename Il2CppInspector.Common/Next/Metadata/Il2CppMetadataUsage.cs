@@ -21,6 +21,9 @@ public partial record struct Il2CppMetadataUsage
 
     public static Il2CppMetadataUsage FromValue(in StructVersion version, uint encodedValue)
     {
+        /* Post v19: These encoded indices appear in metadata usages, and are decoded by GetEncodedIndexType/GetDecodedMethodIndex */
+        /* Below v19: These encoded indices appear only in vtables, and are decoded by IsGenericMethodIndex/GetDecodedMethodIndex */
+
         if (version >= MetadataVersions.V270)
         {
             return new Il2CppMetadataUsage
@@ -43,7 +46,6 @@ public partial record struct Il2CppMetadataUsage
             };
         }
 
-        /* These encoded indices appear only in vtables, and are decoded by IsGenericMethodIndex/GetDecodedMethodIndex */
         var methodType = (encodedValue >> 31) != 0
             ? Il2CppMetadataUsageType.MethodRef 
             : Il2CppMetadataUsageType.MethodDef;

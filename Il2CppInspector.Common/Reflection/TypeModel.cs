@@ -11,6 +11,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Il2CppInspector.Next.BinaryMetadata;
+using Il2CppInspector.Next.Metadata;
 using Il2CppInspector.Next.NameTranslation;
 
 namespace Il2CppInspector.Reflection
@@ -349,29 +350,29 @@ namespace Il2CppInspector.Reflection
         // Get the name of a metadata typeRef
         public string GetMetadataUsageName(MetadataUsage usage) {
             switch (usage.Type) {
-                case MetadataUsageType.TypeInfo:
-                case MetadataUsageType.Type:
+                case Il2CppMetadataUsageType.TypeInfo:
+                case Il2CppMetadataUsageType.Il2CppType:
                     return GetMetadataUsageType(usage).Name;
 
-                case MetadataUsageType.MethodDef:
+                case Il2CppMetadataUsageType.MethodDef:
                     var method = GetMetadataUsageMethod(usage);
                     return $"{method.DeclaringType.Name}.{method.Name}";
 
-                case MetadataUsageType.FieldInfo: 
+                case Il2CppMetadataUsageType.FieldInfo: 
                     var fieldRef = Package.FieldRefs[usage.SourceIndex];
                     var type = GetMetadataUsageType(usage);
                     var field = type.DeclaredFields.First(f => f.Index == type.Definition.FieldIndex + fieldRef.FieldIndex);
                     return $"{type.Name}.{field.Name}";
 
-                case MetadataUsageType.StringLiteral:
+                case Il2CppMetadataUsageType.StringLiteral:
                     return Package.StringLiterals[usage.SourceIndex];
 
-                case MetadataUsageType.MethodRef:
+                case Il2CppMetadataUsageType.MethodRef:
                     type = GetMetadataUsageType(usage);
                     method = GetMetadataUsageMethod(usage);
                     return $"{type.Name}.{method.Name}";
 
-                case MetadataUsageType.FieldRva:
+                case Il2CppMetadataUsageType.FieldRva:
                     fieldRef = Package.FieldRefs[usage.SourceIndex];
                     type = GetMetadataUsageType(usage);
                     field = type.DeclaredFields.First(f => f.Index == type.Definition.FieldIndex + fieldRef.FieldIndex);
@@ -382,16 +383,16 @@ namespace Il2CppInspector.Reflection
 
         // Get the type used in a metadata usage
         public TypeInfo GetMetadataUsageType(MetadataUsage usage) => usage.Type switch {
-            MetadataUsageType.Type or MetadataUsageType.TypeInfo => TypesByReferenceIndex[usage.SourceIndex],
-            MetadataUsageType.MethodDef or MetadataUsageType.MethodRef => GetMetadataUsageMethod(usage).DeclaringType,
-            MetadataUsageType.FieldInfo or MetadataUsageType.FieldRva => TypesByReferenceIndex[Package.FieldRefs[usage.SourceIndex].TypeIndex],
+            Il2CppMetadataUsageType.Il2CppType or Il2CppMetadataUsageType.TypeInfo => TypesByReferenceIndex[usage.SourceIndex],
+            Il2CppMetadataUsageType.MethodDef or Il2CppMetadataUsageType.MethodRef => GetMetadataUsageMethod(usage).DeclaringType,
+            Il2CppMetadataUsageType.FieldInfo or Il2CppMetadataUsageType.FieldRva => TypesByReferenceIndex[Package.FieldRefs[usage.SourceIndex].TypeIndex],
             _ => throw new InvalidOperationException("Incorrect metadata usage type to retrieve referenced type")
         };
 
         // Get the method used in a metadata usage
         public MethodBase GetMetadataUsageMethod(MetadataUsage usage) => usage.Type switch {
-            MetadataUsageType.MethodDef => MethodsByDefinitionIndex[usage.SourceIndex],
-            MetadataUsageType.MethodRef => GenericMethods[Package.MethodSpecs[usage.SourceIndex]],
+            Il2CppMetadataUsageType.MethodDef => MethodsByDefinitionIndex[usage.SourceIndex],
+            Il2CppMetadataUsageType.MethodRef => GenericMethods[Package.MethodSpecs[usage.SourceIndex]],
             _ => throw new InvalidOperationException("Incorrect metadata usage type to retrieve referenced type")
         };
     }
