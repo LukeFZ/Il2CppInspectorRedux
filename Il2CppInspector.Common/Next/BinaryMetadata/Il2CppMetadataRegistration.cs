@@ -56,4 +56,12 @@ public partial record struct Il2CppMetadataRegistration
 
     [VersionCondition(GreaterThanOrEqual = "19.0")]
     public Pointer<Pointer<Il2CppMetadataUsage>> MetadataUsages;
+
+    [NativeInteger]
+    [VersionCondition(GreaterThanOrEqual = "106.1")]
+    public ulong AlwaysInitMetadataUsagesCount;
+
+    // Actually a pointer to Il2CppClass** (?), but that is just the type of the usage
+    [VersionCondition(GreaterThanOrEqual = "106.1")]
+    public Pointer<Pointer<Il2CppMetadataUsage>> AlwaysInitMetadataUsages;
 }

@@ -53,4 +53,8 @@ public static class MetadataVersions
     public static readonly StructVersion V1060 = new(106);
     // NOTE: This version additionally uses tags to specify the size of GenericParameterIndex, FieldIndex, DefaultValueDataIndex,
     // alongside changing TypeArgc to a ushort and IsMethod to a byte in Il2CppGenericContainer.
+
+    // Unity 6000.6.0a6
+    public static readonly StructVersion V1061 = new(106, 1);
+    // NOTE: This removes kMetadataUsageIl2CppType from Il2CppMetadataUsage, and adds alwaysInitMetadataUsages to Il2CppMetadataRegistration
 }

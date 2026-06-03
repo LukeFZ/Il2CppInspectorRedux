@@ -311,6 +311,24 @@ namespace Il2CppInspector
             if (metadataRegistration == 0)
                 return (0, 0);
 
+            if (Image.Version == MetadataVersions.V1060)
+            {
+                // We have to check if we are loading v106.1 instead
+                // We do this by reading the new meta, and verifying that the pointer and count for the always init usages makes sense
+                // This should always be non-zero, as it includes the default IL2CPP types + some small amount of eager static cctor types.
+                var old = Image.Version;
+
+                Image.Version = MetadataVersions.V1061;
+                var v1061MetadataRegistration = Image.ReadMappedVersionedObject<Il2CppMetadataRegistration>(metadataRegistration);
+                var isActualV1061 = Image.TryMapVATR(v1061MetadataRegistration.AlwaysInitMetadataUsages, out _) &&
+                                    v1061MetadataRegistration.AlwaysInitMetadataUsagesCount is > 0 and < 0x1000;
+
+                if (!isActualV1061)
+                {
+                    Image.Version = old;
+                }
+            }
+
             return (codeRegistration, metadataRegistration);
         }
     }
