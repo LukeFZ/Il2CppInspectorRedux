@@ -3,7 +3,7 @@
 	  <TargetFramework>net10.0</TargetFramework>
 	  <LangVersion>preview</LangVersion>
 	  <EnableSourceControlManagerQueries>true</EnableSourceControlManagerQueries>
-	  <Version>2026.1</Version>
+	  <Version>2026.2</Version>
 	  <AssemblyVersion>$(Version).0.0</AssemblyVersion>
 	  <FileVersion>$(AssemblyVersion)</FileVersion>
 	  <Authors>Katy Coe, LukeFZ</Authors>
