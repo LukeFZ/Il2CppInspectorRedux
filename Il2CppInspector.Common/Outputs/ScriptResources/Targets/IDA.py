@@ -89,8 +89,16 @@ class IDADisassemblerInterface(BaseDisassemblerInterface):
         ida_ida.inf_set_genflags(self._cached_genflags & ~ida_ida.INFFL_AUTO)
 
         # Unload type libraries we know to cause issues - like the c++ linux one
-        PROBLEMATIC_LINUX_TYPELIBS = [f"gnulnx_{x}" for x in ["x86", "x64", "arm", "arm64"]]
-        PROBLEMATIC_WINDOWS_TYPELIBS = ["_".join(x) for x in itertools.product(["mssdk64", "mssdk"], ["2000", "nt", "vista", "win10", "win7", "win8", "win81", "ws03", "xp"])]
+        PROBLEMATIC_LINUX_TYPELIBS = [
+            f"gnulnx_{x}" for x in ["x86", "x64", "arm", "arm64"]
+        ]
+        PROBLEMATIC_WINDOWS_TYPELIBS = [
+            "_".join(x)
+            for x in itertools.product(
+                ["mssdk64", "mssdk"],
+                ["2000", "nt", "vista", "win10", "win7", "win8", "win81", "ws03", "xp"],
+            )
+        ]
         PROBLEMATIC_TYPELIBS = PROBLEMATIC_LINUX_TYPELIBS + PROBLEMATIC_WINDOWS_TYPELIBS
 
         for lib in PROBLEMATIC_TYPELIBS:
@@ -111,6 +119,9 @@ class IDADisassemblerInterface(BaseDisassemblerInterface):
             ida_srclang.parse_decls_with_parser("clang", None, header_path, True)
         else:
             original_macros = ida_typeinf.get_c_macros()
+            if original_macros is None:
+                original_macros = ""
+
             ida_typeinf.set_c_macros(original_macros + ";_IDA_=1")
             ida_typeinf.idc_parse_types(
                 os.path.join(
@@ -121,9 +132,15 @@ class IDADisassemblerInterface(BaseDisassemblerInterface):
             ida_typeinf.set_c_macros(original_macros)
 
         # Skip make_function on Windows GameAssembly.dll files due to them predefining all functions through pdata which makes the method very slow
-        self._skip_function_creation = (
-            ida_segment.get_segm_by_name(".pdata") is not None
-        )
+        if ida_pro.IDA_SDK_VERSION >= 940:
+            self._skip_function_creation = (
+                ida_segment.get_segment_ea_by_name(".pdata") != ida_idaapi.BADADDR
+            )
+        else:
+            self._skip_function_creation = (
+                ida_segment.get_segm_by_name(".pdata") is not None
+            )
+
         if self._skip_function_creation:
             print(".pdata section found, skipping function boundaries")
 
@@ -189,11 +206,18 @@ class IDADisassemblerInterface(BaseDisassemblerInterface):
         ida_bytes.set_cmt(address, cmt, False)
 
     def set_function_comment(self, address: int, cmt: str):
-        func = ida_funcs.get_func(address)
-        if func is None:
-            return
+        if ida_pro.IDA_SDK_VERSION >= 940:
+            func = ida_funcs.get_func_start(address)
+            if func == ida_idaapi.BADADDR:
+                return
 
-        ida_funcs.set_func_cmt(func, cmt, True)
+            ida_funcs.set_func_cmt_ea(func, cmt, True)
+        else:
+            func = ida_funcs.get_func(address)
+            if func is None:
+                return
+
+            ida_funcs.set_func_cmt(func, cmt, True)
 
     def set_data_name(self, address: int, name: str):
         ida_name.set_name(
@@ -221,6 +245,9 @@ class IDADisassemblerInterface(BaseDisassemblerInterface):
             self._function_dirtree.mkdir(group)
 
         name = ida_funcs.get_func_name(address)
+        if name is None:
+            return
+
         self._function_dirtree.rename(name, f"{group}/{name}")
 
     # only required if supports_fake_string_segment == True
@@ -229,10 +256,20 @@ class IDADisassemblerInterface(BaseDisassemblerInterface):
         end = start + size
 
         ida_segment.add_segm(0, start, end, name, "DATA")
-        segment = ida_segment.get_segm_by_name(name)
-        segment.bitness = 1 if self._is_32_bit else 2
-        segment.perm = ida_segment.SEGPERM_READ
-        segment.update()
+
+        if ida_pro.IDA_SDK_VERSION >= 940:
+            segment_info = ida_segment.segment_info_t()
+            ida_segment.get_segment_info(segment_info, start)
+
+            segment_info.set_bitness(1 if self._is_32_bit else 2)
+            segment_info.set_perm(ida_segment.SEGPERM_READ)
+
+            ida_segment.set_segment_info(segment_info)
+        else:
+            segment = ida_segment.get_segm_by_name(name)
+            segment.bitness = 1 if self._is_32_bit else 2
+            segment.perm = ida_segment.SEGPERM_READ
+            segment.update()
 
         return start
 
