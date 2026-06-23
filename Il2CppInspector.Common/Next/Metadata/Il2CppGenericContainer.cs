@@ -1,32 +1,49 @@
-﻿using System.Runtime.InteropServices;
+﻿using VersionedSerialization;
 
 namespace Il2CppInspector.Next.Metadata;
 
-using VersionedSerialization.Attributes;
-
-[VersionedStruct]
-[StructLayout(LayoutKind.Explicit)]
-public partial record struct Il2CppGenericContainer
+public record struct Il2CppGenericContainer : IReadable
 {
-    [field: FieldOffset(0)]
     public int OwnerIndex { get; private set; }
-
-    [VersionCondition(LessThan = "106.0")]
-    [field: FieldOffset(4)]
     public int TypeArgc { get; private set; }
-
-    [VersionCondition(GreaterThanOrEqual = "106.0")]
-    [field: FieldOffset(4)]
-    private ushort _newTypeArgc;
-
-    [VersionCondition(LessThan = "106.0")]
-    [field: FieldOffset(8)]
     public int IsMethod { get; private set; }
-
-    [VersionCondition(GreaterThanOrEqual = "106.0")]
-    [field: FieldOffset(8)]
-    public byte _newIsMethod;
-
-    [field: FieldOffset(12)]
     public GenericParameterIndex GenericParameterStart { get; private set; }
+
+    void IReadable.Read<TReader>(ref Reader<TReader> reader, in StructVersion version)
+    {
+        OwnerIndex = reader.ReadPrimitive<int>();
+
+        if (version >= MetadataVersions.V1060)
+        {
+            TypeArgc = reader.ReadPrimitive<ushort>();
+            IsMethod = reader.ReadPrimitive<byte>();
+        }
+        else
+        {
+            TypeArgc = reader.ReadPrimitive<int>();
+            IsMethod = reader.ReadPrimitive<int>();
+        }
+
+        GenericParameterStart = reader.ReadVersionedObject<GenericParameterIndex>(version);
+    }
+
+    static int IReadable.Size(in StructVersion version, in ReaderConfig config)
+    {
+        var size = sizeof(int);
+
+        if (version >= MetadataVersions.V1060)
+        {
+            size += sizeof(ushort);
+            size += sizeof(byte);
+        }
+        else
+        {
+            size += sizeof(int);
+            size += sizeof(int);
+        }
+
+        size += GenericParameterIndex.Size(version, config);
+
+        return size;
+    }
 }
