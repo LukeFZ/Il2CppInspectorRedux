@@ -10,6 +10,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Il2CppInspector.IL2CPP;
 using Il2CppInspector.Next.Metadata;
 
 namespace Il2CppInspector.Reflection {
@@ -97,7 +98,9 @@ namespace Il2CppInspector.Reflection {
         public FieldInfo(Il2CppInspector pkg, int fieldIndex, TypeInfo declaringType) :
             base(declaringType) {
             Definition = pkg.Fields[fieldIndex];
-            MetadataToken = (int) Definition.Token;
+            MetadataToken = pkg.GetEntityToken(Definition.Token, fieldIndex,
+                declaringType.Assembly.ImageDefinition.FieldStart, ComputedMetadataTokenType.Field);
+
             Index = fieldIndex;
             Name = pkg.Strings[Definition.NameIndex];
 

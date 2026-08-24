@@ -19,4 +19,6 @@ public partial record struct Il2CppTypeDefinitionBitfield
     public PackingSize ClassSize => (PackingSize)((_value >> 12) & 0b1111);
     public bool IsByRefLike => ((_value >> 16) & 1) == 1;
     public bool HasInlineArray => ((_value >> 17) & 1) == 1;
+    public readonly bool HasIDynamicInterfaceCastable => ((_value >> 18) & 1) == 1;
+    public readonly bool HasGeneratedMethods => ((_value >> 19) & 1) == 1;
 }

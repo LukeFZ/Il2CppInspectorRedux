@@ -7,6 +7,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Il2CppInspector.IL2CPP;
 using Il2CppInspector.Next.Metadata;
 
 namespace Il2CppInspector.Reflection
@@ -42,7 +43,8 @@ namespace Il2CppInspector.Reflection
         public EventInfo(Il2CppInspector pkg, int eventIndex, TypeInfo declaringType) :
             base(declaringType) {
             Definition = pkg.Events[eventIndex];
-            MetadataToken = (int) Definition.Token;
+            MetadataToken = pkg.GetEntityToken(Definition.Token, eventIndex,
+                declaringType.Assembly.ImageDefinition.EventIndex, ComputedMetadataTokenType.Event);
             Index = eventIndex;
             Name = pkg.Strings[Definition.NameIndex];
             rootDefinition = this;

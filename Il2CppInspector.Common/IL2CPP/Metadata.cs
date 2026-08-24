@@ -55,6 +55,8 @@ namespace Il2CppInspector
         public ImmutableArray<Il2CppGenericMethodFunctionsDefinitions> GenericMethodFunctionsDefinitions { get; set; } = [];
         public ImmutableArray<Il2CppGenericMethodFunctionsDefinitionsWithAdjustor> GenericMethodFunctionsDefinitionsWithAdjustor { get; set; } = [];
         public ImmutableArray<InvokerTableIndex> InvokerIndices { get; set; } = [];
+        public ImmutableArray<Il2CppGeneratedMethodTypeInfo> GeneratedMethodTypeInfos { get; set; } = [];
+        public ImmutableArray<Il2CppGeneratedMethodToken> GeneratedMethodTokens { get; set; } = [];
 
         public int FieldAndParameterDefaultValueDataOffset => Version >= MetadataVersions.V380
             ? Header.FieldAndParameterDefaultValueData.Offset
@@ -71,6 +73,7 @@ namespace Il2CppInspector
         public Dictionary<int, string> Strings { get; private set; } = [];
         public Dictionary<int, byte[]> AssemblyPublicKeys { get; private set; } = [];
         public Dictionary<Il2CppMethodSpec, Il2CppGenericMethodFunctionsDefinitionsWithAdjustor> GenericMethodTable { get; private set; } = [];
+        public Dictionary<int, Il2CppGeneratedMethodTypeInfo> GeneratedMethodTypeInfosByType { get; private set; } = [];
 
         // Set if something in the metadata has been modified / decrypted
         public bool IsModified { get; private set; } = false;
@@ -114,12 +117,27 @@ namespace Il2CppInspector
             // Set object versioning for Bin2Object from metadata version
             Version = new StructVersion(Header.Version);
 
-            if (Version < MetadataVersions.V160 || Version > MetadataVersions.V1080) {
+            if (Version < MetadataVersions.V160 || Version > MetadataVersions.V1100) {
                 throw new InvalidOperationException($"The supplied metadata file is not of a supported version ({Header.Version}).");
             }
 
             // Rewind and read metadata header with the correct version settings
             Header = ReadVersionedObject<Il2CppGlobalMetadataHeader>(0);
+
+            // Handle the "fake v107" version that newer 6000.5 versions introduced
+            if (Version == MetadataVersions.V1070 && Header.VtableMethods.Count > 1)
+            {
+                // Since v106.1 removed a value from Il2CppMetadataUsage, we can check if the type of a vtable method entry
+                // is correct with the incremented value - if it is off by one we know it is one of the fake versions, otherwise
+                // it is actually v107.
+
+                var vtableMethodIndex = ReadPrimitive<uint>(Header.VtableMethods.Offset);
+
+                if (Il2CppMetadataUsage.FromValue(Version, vtableMethodIndex).Type == Il2CppMetadataUsageType.FieldInfo)
+                {
+                    Version = new StructVersion(106, Version.Minor, Version.Tag);
+                }
+            }
 
             // Setup the proper index sizes for metadata v38+
             if (Version >= MetadataVersions.V380) 
@@ -360,6 +378,14 @@ namespace Il2CppInspector
                 InvokerIndices = ReadMetadataArray<InvokerTableIndex>(0, 0, Header.InvokerIndices);
             }
 
+            if (Version >= MetadataVersions.V1100)
+            {
+                GeneratedMethodTypeInfos =
+                    ReadMetadataArray<Il2CppGeneratedMethodTypeInfo>(0, 0, Header.GeneratedMethodTypeInfos);
+                GeneratedMethodTokens =
+                    ReadMetadataArray<Il2CppGeneratedMethodToken>(0, 0, Header.GeneratedMethodTokens);
+            }
+
             // Get all metadata strings
             var pluginGetStringsResult = PluginHooks.GetStrings(this);
             if (pluginGetStringsResult.IsDataModified && !pluginGetStringsResult.IsInvalid)
@@ -487,6 +513,16 @@ namespace Il2CppInspector
                 foreach (var entry in GenericMethodFunctionsDefinitionsWithAdjustor)
                 {
                     GenericMethodTable[GetMethodSpec(entry.GenericMethodIndex)] = entry;
+                }
+            }
+
+            if (Version >= MetadataVersions.V1100)
+            {
+                GeneratedMethodTypeInfosByType.EnsureCapacity(GeneratedMethodTypeInfos.Length);
+
+                foreach (var entry in GeneratedMethodTypeInfos)
+                {
+                    GeneratedMethodTypeInfosByType[entry.TypeIndex] = entry;
                 }
             }
 

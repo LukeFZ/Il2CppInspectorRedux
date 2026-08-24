@@ -75,9 +75,9 @@ namespace Il2CppInspector.Cpp.UnityHeaders
             // Get the text of this resource
             public string GetText() => ResourceHelper.GetText(Name);
 
-            public UnityResource(string name) {
+            public UnityResource(string name, bool nameContainsMetadataVersion) {
                 Name = name;
-                VersionRange = UnityVersionRange.FromFilename(name);
+                VersionRange = UnityVersionRange.FromFilename(name, nameContainsMetadataVersion);
             }
 
             public override string ToString() => Name + " for " + VersionRange;
@@ -89,13 +89,13 @@ namespace Il2CppInspector.Cpp.UnityHeaders
         public static IEnumerable<UnityResource> GetAllTypeHeaders() =>
             ResourceHelper.GetNamesForNamespace(typeof(UnityHeaders).Namespace)
                 .Where(s => s.EndsWith(".h"))
-                .Select(s => new UnityResource(s));
+                .Select(s => new UnityResource(s, true));
 
         // List all API header files embedded into this build of Il2CppInspector
         public static IEnumerable<UnityResource> GetAllAPIHeaders() =>
             ResourceHelper.GetNamesForNamespace("Il2CppInspector.Cpp.Il2CppAPIHeaders")
                 .Where(s => s.EndsWith(".h"))
-                .Select(s => new UnityResource(s));
+                .Select(s => new UnityResource(s, false));
 
         // Get the headers which support the given version of Unity
         public static UnityHeaders GetHeadersForVersion(UnityVersion version) =>

@@ -17,6 +17,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using Il2CppInspector.IL2CPP;
+using Il2CppInspector.Reflection;
 using VersionedSerialization;
 
 namespace Il2CppInspector
@@ -76,6 +78,7 @@ namespace Il2CppInspector
         public Dictionary<Il2CppMethodSpec, int> GenericMethodInvokerIndices => Binary.GenericMethodInvokerIndices;
         public ImmutableArray<Il2CppTypeDefinitionSizes> TypeDefinitionSizes => Binary.TypeDefinitionSizes;
         public Dictionary<TypeIndex, int> TypeInlineArrays { get; } = new();
+        public int GeneratedMethodsStart { get; }
 
         // TODO: Finish all file access in the constructor and eliminate the need for this
         public IFileFormatStream BinaryImage => Binary.Image;
@@ -314,6 +317,11 @@ namespace Il2CppInspector
                 TypeInlineArrays = Metadata.TypeInlineArrays.ToDictionary(x => x.TypeIndex, x => x.Length);
             }
 
+            if (Version >= MetadataVersions.V1100)
+            {
+                GeneratedMethodsStart = Metadata.Methods.Length - Metadata.GeneratedMethodTokens.Length;
+            }
+
             // Merge all metadata usage references into a single distinct list
             MetadataUsages = buildMetadataUsages();
 
@@ -322,22 +330,22 @@ namespace Il2CppInspector
         }
 
         // Get a method pointer if available
-        public (ulong Start, ulong End)? GetMethodPointer(Il2CppCodeGenModule module, Il2CppMethodDefinition methodDef) {
+        public (ulong Start, ulong End)? GetMethodPointer(Il2CppCodeGenModule module, Il2CppMethodDefinition methodDef, int token) {
             // Find method pointer
-            if (methodDef.MethodIndex < 0)
-                return null;
-
             ulong start = 0;
 
             // Global method pointer array
             if (Version <= MetadataVersions.V241) {
+                if (methodDef.MethodIndex < 0)
+                    return null;
+
                 start = Binary.GlobalMethodPointers[methodDef.MethodIndex];
             }
 
             // Per-module method pointer array uses the bottom 24 bits of the method's metadata token
             // Derived from il2cpp::vm::MetadataCache::GetMethodPointer
             if (Version >= MetadataVersions.V242) {
-                var method = (methodDef.Token & 0xffffff);
+                var method = token & 0xffffff;
                 if (method == 0)
                     return null;
 
@@ -398,12 +406,13 @@ namespace Il2CppInspector
         }
 
         // Get a method invoker index from a method definition
-        public int GetInvokerIndex(in Il2CppCodeGenModule module, in Il2CppImageDefinition image, Il2CppMethodDefinition methodDef) {
+        public int GetInvokerIndex(in Il2CppCodeGenModule module, in Il2CppImageDefinition image, in Il2CppMethodDefinition methodDef, 
+            int methodIndex, in Il2CppTypeDefinition typeDefinition, int typeDefinitionIndex) {
             if (Version <= MetadataVersions.V241) {
                 return methodDef.InvokerIndex;
             }
 
-            var methodInModule = methodDef.Token & 0xffffff;
+            var methodInModule = GetMethodToken(methodDef.Token, image, typeDefinition, typeDefinitionIndex, methodIndex) & 0xffffff;
 
             if (Version < MetadataVersions.V1080)
             {
@@ -456,6 +465,55 @@ namespace Il2CppInspector
                     yield return GetMethodSpec(i);
                 }
             }
+        }
+
+         internal int MethodMetadataIndexFromTypeDefinition(in Il2CppTypeDefinition definition, int typeDefinitionIndex,
+            int methodIndex)
+        {
+            if (Metadata.Version >= MetadataVersions.V1100)
+            {
+                if (!definition.Bitfield.HasGeneratedMethods)
+                    return definition.MethodIndex + methodIndex;
+
+                var generatedInfo = Metadata.GeneratedMethodTypeInfosByType[typeDefinitionIndex];
+                var nonGeneratedMethodCount = definition.MethodCount - generatedInfo.GeneratedMethodCount;
+
+                if (methodIndex < nonGeneratedMethodCount)
+                    return definition.MethodIndex + methodIndex;
+
+                var generatedMethodIndex = methodIndex - nonGeneratedMethodCount;
+                return generatedInfo.GeneratedMethodStart + generatedMethodIndex;
+            }
+
+            return definition.MethodIndex + methodIndex;
+        }
+
+        internal int GetMethodToken(uint storedToken, in Il2CppImageDefinition image,
+            in Il2CppTypeDefinition definition, int typeDefinitionIndex, int methodIndex)
+        {
+            if (Metadata.Version < MetadataVersions.V1100)
+            {
+                return (int)storedToken;
+            }
+
+            if (definition.Bitfield.HasGeneratedMethods)
+            {
+                var generatedInfo = Metadata.GeneratedMethodTypeInfosByType[typeDefinitionIndex];
+                if (methodIndex >= generatedInfo.GeneratedMethodStart)
+                    return (int)Metadata.GeneratedMethodTokens[methodIndex - GeneratedMethodsStart].Token;
+            }
+
+            return 0x06000000 | (methodIndex - image.MethodStart + 1);
+        }
+
+        internal int GetEntityToken(uint storedToken, int index, int tokenOffset, ComputedMetadataTokenType type)
+        {
+            if (Metadata.Version < MetadataVersions.V1100)
+            {
+                return (int)storedToken;
+            }
+
+            return (int)type | (index - tokenOffset + 1);
         }
 
         #region Loaders

@@ -20,6 +20,7 @@ from ghidra.util.classfinder import ClassSearcher
 from ghidra.util.exception import DuplicateNameException
 from ghidra.program.model.address import Address
 from java.lang import Long
+import sys
 
 try:
     from typing import TYPE_CHECKING, Union
@@ -30,8 +31,6 @@ try:
             BaseDisassemblerInterface,
             ScriptContext,
         )
-
-        import sys
 
         from ghidra.ghidra_builtins import (
             currentProgram,

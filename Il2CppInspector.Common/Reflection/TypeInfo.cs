@@ -13,6 +13,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using Il2CppInspector.IL2CPP;
 using Il2CppInspector.Next;
 using Il2CppInspector.Next.BinaryMetadata;
 using Il2CppInspector.Next.Metadata;
@@ -770,7 +771,7 @@ namespace Il2CppInspector.Reflection
 
             Definition = pkg.TypeDefinitions[typeIndex];
             Sizes = pkg.TypeDefinitionSizes[typeIndex];
-            MetadataToken = (int) Definition.Token;
+            MetadataToken = pkg.GetEntityToken(Definition.Token, typeIndex, owner.ImageDefinition.TypeStart, ComputedMetadataTokenType.Type);
             Index = typeIndex;
             Namespace = Regex.Replace(pkg.Strings[Definition.NamespaceIndex], @"[^A-Za-z0-9_\-\.<>{}]", "");
             Name = pkg.Strings[Definition.NameIndex];
@@ -835,10 +836,13 @@ namespace Il2CppInspector.Reflection
             // Add all methods
             declaredConstructors = new List<ConstructorInfo>();
             declaredMethods = new List<MethodInfo>();
-            for (var m = Definition.MethodIndex; m < Definition.MethodIndex + Definition.MethodCount; m++) {
-                var method = new MethodInfo(pkg, m, this);
+            for (var m = 0; m < Definition.MethodCount; m++)
+            {
+                var index = pkg.MethodMetadataIndexFromTypeDefinition(Definition, Index, m);
+
+                var method = new MethodInfo(pkg, index, this);
                 if (method.Name == ConstructorInfo.ConstructorName || method.Name == ConstructorInfo.TypeConstructorName)
-                    declaredConstructors.Add(new ConstructorInfo(pkg, m, this));
+                    declaredConstructors.Add(new ConstructorInfo(pkg, index, this));
                 else
                     declaredMethods.Add(method);
             }

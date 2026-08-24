@@ -168,7 +168,8 @@ namespace Il2CppInspector.Reflection
             foreach (var method in MethodsByDefinitionIndex)
             {
                 var index = package.GetInvokerIndex(method.DeclaringType.Assembly.ModuleDefinition,
-                    method.DeclaringType.Assembly.ImageDefinition, method.Definition);
+                    method.DeclaringType.Assembly.ImageDefinition, method.Definition, method.Index,
+                    method.DeclaringType.Definition, method.DeclaringType.Index);
 
                 if (index != -1)
                 {

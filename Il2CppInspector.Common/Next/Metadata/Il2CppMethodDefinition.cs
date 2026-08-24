@@ -39,7 +39,9 @@ public partial record struct Il2CppMethodDefinition
     [VersionCondition(LessThanOrEqual = "24.1")]
     public int RgctxCount { get; private set; }
 
+    [VersionCondition(LessThan = "110.0")]
     public uint Token { get; private set; }
+
     public ushort Flags { get; private set; }
     public ushort ImplFlags { get; private set; }
     public ushort Slot { get; private set; }

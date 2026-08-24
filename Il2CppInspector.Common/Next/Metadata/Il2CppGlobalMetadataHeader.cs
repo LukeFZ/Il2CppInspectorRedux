@@ -372,6 +372,13 @@ public partial record struct Il2CppGlobalMetadataHeader
     [VersionCondition(GreaterThanOrEqual = "108.0")]
     public Il2CppSectionMetadata StaticConstructorTypeIndices { get; private set; }
 
+    [VersionCondition(GreaterThanOrEqual = "110.0")]
+    public Il2CppSectionMetadata GeneratedMethodTypeInfos { get; private set; }
+
+    [VersionCondition(GreaterThanOrEqual = "110.0")]
+    public Il2CppSectionMetadata GeneratedMethodTokens { get; private set; }
+
+
     public const int ExpectedSanity = unchecked((int)0xFAB11BAF);
     public readonly bool SanityValid => Sanity == ExpectedSanity;
 }

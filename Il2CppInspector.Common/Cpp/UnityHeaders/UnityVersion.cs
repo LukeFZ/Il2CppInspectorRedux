@@ -164,7 +164,7 @@ namespace Il2CppInspector.Cpp.UnityHeaders
         }
 
         // Create a version range from a string, in the format "[Il2CppInspector.Cpp.<namespace-leaf>.][metadataVersion-]<min>-[max].h"
-        public static UnityVersionRange FromFilename(string headerFilename) {
+        public static UnityVersionRange FromFilename(string headerFilename, bool containsMetadataVersion = false) {
             var baseNamespace = "Il2CppInspector.Cpp.";
             headerFilename = headerFilename.Replace(".h", "");
 
@@ -173,13 +173,12 @@ namespace Il2CppInspector.Cpp.UnityHeaders
                 headerFilename = headerFilename.Substring(headerFilename.IndexOf(".") + 1);
             }
 
+            // <Metadata Version>-<Minimum Unity Version>[-<Maximum Unity Version>]
             var bits = headerFilename.Split("-");
-
-            // Metadata version supplied
-            // Note: This relies on the metadata version being 2/3/4 characters,
-            // and that the smallest Unity version must be 5 characters or more
-            if (headerFilename.Substring(2, 3).Contains('-'))
-                bits = bits.Skip(1).ToArray();
+            if (containsMetadataVersion)
+            {
+                bits = bits[1..];
+            }
 
             var Min = new UnityVersion(bits[0]);
             UnityVersion Max = null;

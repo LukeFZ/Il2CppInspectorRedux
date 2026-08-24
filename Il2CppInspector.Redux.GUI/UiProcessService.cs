@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Il2CppInspector.Redux.GUI;
 
@@ -10,13 +9,13 @@ public class UiProcessService(IHostApplicationLifetime lifetime) : BackgroundSer
 
     private Process? _uiProcess;
     private string? _uiExectuablePath;
-    private readonly TaskCompletionSource _uiProcessCreatedTask = new();
+    private readonly TaskCompletionSource<Process> _uiProcessCreatedTask = new();
 
     public void LaunchUiProcess(int port)
     {
         _uiExectuablePath ??= ExtractUiExecutable();
-        _uiProcess = Process.Start(new ProcessStartInfo(_uiExectuablePath, [port.ToString()]));
-        _uiProcessCreatedTask.SetResult();
+        var process = Process.Start(_uiExectuablePath, [port.ToString()]);
+        _uiProcessCreatedTask.SetResult(process);
     }
 
     private static string ExtractUiExecutable()
@@ -43,18 +42,17 @@ public class UiProcessService(IHostApplicationLifetime lifetime) : BackgroundSer
         }
     }
 
-    [MemberNotNull(nameof(_uiProcess))]
-    private async Task WaitForUiLaunchAsync(CancellationToken cancellationToken)
+    private async Task<Process> WaitForUiLaunchAsync(CancellationToken cancellationToken)
     {
-        await _uiProcessCreatedTask.Task.WaitAsync(cancellationToken);
+        _uiProcess = await _uiProcessCreatedTask.Task.WaitAsync(cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
-        Debug.Assert(_uiProcess != null);
+        return _uiProcess;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await WaitForUiLaunchAsync(stoppingToken);
-        await _uiProcess.WaitForExitAsync(stoppingToken);
+        var process = await WaitForUiLaunchAsync(stoppingToken);
+        await process.WaitForExitAsync(stoppingToken);
         lifetime.StopApplication();
     }
 

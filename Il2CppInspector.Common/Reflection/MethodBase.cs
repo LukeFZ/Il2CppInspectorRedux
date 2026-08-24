@@ -118,12 +118,15 @@ namespace Il2CppInspector.Reflection
         // Initialize a method from a method definition (MethodDef)
         protected MethodBase(Il2CppInspector pkg, int methodIndex, TypeInfo declaringType) : base(declaringType) {
             Definition = pkg.Methods[methodIndex];
-            MetadataToken = (int) Definition.Token;
+            MetadataToken = pkg.GetMethodToken(Definition.Token, declaringType.Assembly.ImageDefinition,
+                declaringType.Definition,
+                declaringType.Index, methodIndex);
+
             Index = methodIndex;
             Name = pkg.Strings[Definition.NameIndex];
 
             // Find method pointer
-            VirtualAddress = pkg.GetMethodPointer(Assembly.ModuleDefinition, Definition);
+            VirtualAddress = pkg.GetMethodPointer(Assembly.ModuleDefinition, Definition, MetadataToken);
 
             // Add to global method definition list
             Assembly.Model.MethodsByDefinitionIndex[Index] = this;

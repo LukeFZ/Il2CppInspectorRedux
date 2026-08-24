@@ -1,0 +1,34 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="docs/CSProj_Preview.png" />
+    <File Path="docs/Ghidra_Guide.png" />
+    <File Path="docs/Ghidra_Preview.png" />
+    <File Path="docs/GUI_Preview.png" />
+    <File Path="docs/IDA_Preview.png" />
+    <File Path="docs/VisualStudio_Preview.png" />
+    <File Path="get-plugins.ps1" />
+    <File Path="get-plugins.sh" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/Solution Items/.github/" />
+  <Folder Name="/Solution Items/.github/workflows/">
+    <File Path=".github/workflows/build.yml" />
+    <File Path=".github/workflows/release.yml" />
+  </Folder>
+  <Project Path="Bin2Object/Bin2Object/Bin2Object.csproj" />
+  <Project Path="Il2CppInspector.CLI/Il2CppInspector.CLI.csproj">
+    <BuildDependency Project="Il2CppInspector.Common/Il2CppInspector.csproj" />
+  </Project>
+  <Project Path="Il2CppInspector.Common/Il2CppInspector.csproj" />
+  <Project Path="Il2CppInspector.GUI/Il2CppInspector.GUI.csproj" />
+  <Project Path="Il2CppInspector.Redux.CLI/Il2CppInspector.Redux.CLI.csproj" />
+  <Project Path="Il2CppInspector.Redux.FrontendCore/Il2CppInspector.Redux.FrontendCore.csproj" />
+  <Project Path="Il2CppInspector.Redux.GUI/Il2CppInspector.Redux.GUI.csproj" />
+  <Project Path="Il2CppTests/Il2CppTests.csproj">
+    <BuildDependency Project="Il2CppInspector.Common/Il2CppInspector.csproj" />
+  </Project>
+  <Project Path="VersionedSerialization.Generator/VersionedSerialization.Generator.csproj" />
+  <Project Path="VersionedSerialization/VersionedSerialization.csproj" />
+</Solution>

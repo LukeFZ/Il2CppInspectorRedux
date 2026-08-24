@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Il2CppInspector.IL2CPP;
 using Il2CppInspector.Next.Metadata;
 
 namespace Il2CppInspector.Reflection {
@@ -53,7 +54,8 @@ namespace Il2CppInspector.Reflection {
             base(declaringType) {
             Index = propIndex;
             Definition = pkg.Properties[propIndex];
-            MetadataToken = (int) Definition.Token;
+            MetadataToken = pkg.GetEntityToken(Definition.Token, propIndex,
+                declaringType.Assembly.ImageDefinition.PropertyIndex, ComputedMetadataTokenType.Property);
             Name = pkg.Strings[Definition.NameIndex];
             rootDefinition = this;
 

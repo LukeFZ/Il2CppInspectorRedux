@@ -16,7 +16,7 @@ public partial record struct Il2CppPropertyDefinition
     [VersionCondition(LessThanOrEqual = "24.0")]
     public int CustomAttributeIndex { get; private set; }
 
-    [VersionCondition(GreaterThanOrEqual = "19.0")]
+    [VersionCondition(GreaterThanOrEqual = "19.0", LessThan = "110.0")]
     public uint Token { get; private set; }
 
     public readonly bool IsValid => NameIndex != 0;

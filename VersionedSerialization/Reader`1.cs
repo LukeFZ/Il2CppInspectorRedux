@@ -88,7 +88,7 @@ public ref struct Reader<TReader>(TReader impl, ReaderConfig config = default)
     public ImmutableArray<T> ReadVersionedObjectArray<T>(long count, in StructVersion version = default)
         where T : IReadable, new()
     {
-        var array = GC.AllocateUninitializedArray<T>((int)count);
+        var array = new T[(int)count];
         ReadVersionedObject(array, in version);
         return ImmutableCollectionsMarshal.AsImmutableArray(array);
     }
