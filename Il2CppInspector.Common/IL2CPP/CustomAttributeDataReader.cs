@@ -52,8 +52,10 @@ namespace Il2CppInspector
                 ctors[i] = new CustomAttributeCtor();
 
                 var ctorIndex = _data.ReadUInt32();
-                ctors[i].Ctor = _assembly.Model.Package.Version >= MetadataVersions.V1040 
-                    ? _assembly.Model.GetMetadataUsageMethod(MetadataUsage.FromEncodedIndex(_assembly.Model.Package, ctorIndex)) 
+                if (_assembly.Model.Package.Version < MetadataVersions.V1040 && ctorIndex >= _assembly.Model.MethodsByDefinitionIndex.Length)
+                    throw new IndexOutOfRangeException($"Custom attribute ctor index {ctorIndex} is out of range (max {_assembly.Model.MethodsByDefinitionIndex.Length - 1})");
+                ctors[i].Ctor = _assembly.Model.Package.Version >= MetadataVersions.V1040
+                    ? _assembly.Model.GetMetadataUsageMethod(MetadataUsage.FromEncodedIndex(_assembly.Model.Package, ctorIndex))
                     : _assembly.Model.MethodsByDefinitionIndex[ctorIndex];
             }
 

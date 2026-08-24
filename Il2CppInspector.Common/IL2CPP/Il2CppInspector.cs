@@ -300,7 +300,8 @@ namespace Il2CppInspector
                     {
                         var index = image.CustomAttributeStart + i;
                         var token = Version >= MetadataVersions.V290 ? AttributeDataRanges[index].Token : AttributeTypeRanges[index].Token;
-                        attsByToken.Add(token, index);
+                        // A token can have more than one range; keep the first and skip the rest.
+                        attsByToken.TryAdd(token, index);
                     }
 
                     if (attsByToken.Count > 0)

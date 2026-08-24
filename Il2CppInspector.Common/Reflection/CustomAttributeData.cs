@@ -115,22 +115,43 @@ namespace Il2CppInspector.Reflection
             {
                 if (!asm.Model.AttributesByDataIndices.TryGetValue(customAttributeIndex, out var attributes))
                 {
-                    var range = pkg.Metadata.AttributeDataRanges[customAttributeIndex];
-                    var next = pkg.Metadata.AttributeDataRanges[customAttributeIndex + 1];
-
-                    var startOffset = (uint)pkg.Metadata.AttributeDataOffset + range.StartOffset;
-                    var endOffset = (uint)pkg.Metadata.AttributeDataOffset + next.StartOffset;
-
-                    var reader = new CustomAttributeDataReader(pkg, asm, pkg.Metadata, startOffset, endOffset);
-                    if (reader.Count == 0)
-                        yield break;
-
-                    attributes = reader.Read().Select((x, i) => new CustomAttributeData
+                    try
                     {
-                        AttributeType = x.Ctor.DeclaringType,
-                        CtorInfo = x,
-                        Index = i,
-                    }).ToList();
+                        var range = pkg.Metadata.AttributeDataRanges[customAttributeIndex];
+                        var next = pkg.Metadata.AttributeDataRanges[customAttributeIndex + 1];
+
+                        // The sentinel entry after the last real range should hold the blob's total
+                        // size; fall back to that if it's stale instead of underflowing the length.
+                        var nextStartOffset = next.StartOffset > range.StartOffset
+                            ? next.StartOffset
+                            : (uint)pkg.Metadata.AttributeDataSize;
+
+                        var startOffset = (uint)pkg.Metadata.AttributeDataOffset + range.StartOffset;
+                        var endOffset = (uint)pkg.Metadata.AttributeDataOffset + nextStartOffset;
+
+                        var reader = new CustomAttributeDataReader(pkg, asm, pkg.Metadata, startOffset, endOffset);
+                        if (reader.Count == 0)
+                        {
+                            attributes = new List<CustomAttributeData>();
+                        }
+                        else
+                        {
+                            attributes = reader.Read().Select((x, i) => new CustomAttributeData
+                            {
+                                AttributeType = x.Ctor.DeclaringType,
+                                CtorInfo = x,
+                                Index = i,
+                            }).ToList();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Some entries point at data that doesn't decode into a valid attribute
+                        // record, which can fail in many different ways further down the read path.
+                        // Skip just this entity instead of aborting the whole load.
+                        Console.Error.WriteLine($"[Warning] Failed to read custom attribute data at index {customAttributeIndex} for assembly '{asm.ShortName}': {ex.GetType().Name}: {ex.Message}");
+                        attributes = new List<CustomAttributeData>();
+                    }
 
                     asm.Model.AttributesByDataIndices[customAttributeIndex] = attributes;
                 }

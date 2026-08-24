@@ -64,6 +64,10 @@ namespace Il2CppInspector
             ? Header.AttributeData.Offset
             : Header.AttributeDataOffset;
 
+        public int AttributeDataSize => Version >= MetadataVersions.V380
+            ? Header.AttributeData.SectionSize
+            : Header.AttributeDataSize;
+
         public Dictionary<int, string> Strings { get; private set; } = [];
         public Dictionary<int, byte[]> AssemblyPublicKeys { get; private set; } = [];
         public Dictionary<Il2CppMethodSpec, Il2CppGenericMethodFunctionsDefinitionsWithAdjustor> GenericMethodTable { get; private set; } = [];
