@@ -350,11 +350,15 @@ namespace Il2CppInspector
 
                 // In the event of an exception, the method pointer is not set in the file
                 // This probably means it has been optimized away by the compiler, or is an unused generic method
+                // (or, for a protected/corrupted binary, the CodeGenModule entry may be missing entirely)
                 try {
                     // Remove ARM Thumb marker LSB if necessary
                     start = Binary.ModuleMethodPointers[module][method - 1];
                 }
                 catch (IndexOutOfRangeException) {
+                    return null;
+                }
+                catch (KeyNotFoundException) {
                     return null;
                 }
             }
@@ -416,7 +420,12 @@ namespace Il2CppInspector
             if (Version < MetadataVersions.V1080)
             {
                 // Version >= 24.2
-                return Binary.MethodInvokerIndices[module][(int)methodInModule - 1];
+                // A protected/corrupted binary may be missing the CodeGenModule entry entirely
+                if (!Binary.MethodInvokerIndices.TryGetValue(module, out var invokerIndices)
+                    || methodInModule - 1 >= invokerIndices.Length)
+                    return -1;
+
+                return invokerIndices[(int)methodInModule - 1];
             }
 
             // v108+

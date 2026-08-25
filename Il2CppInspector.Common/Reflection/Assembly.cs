@@ -72,8 +72,9 @@ namespace Il2CppInspector.Reflection {
             }
 
             // Find corresponding module (we'll need this for method pointers on V24.2+)
-            if (Model.Package.Modules != null)
-                ModuleDefinition = Model.Package.Modules[ShortName];
+            // A protected/corrupted binary may be missing the CodeGenModule entry for some assemblies
+            if (Model.Package.Modules != null && Model.Package.Modules.TryGetValue(ShortName, out var moduleDefinition))
+                ModuleDefinition = moduleDefinition;
 
             // Generate types in DefinedTypes from typeStart to typeStart+typeCount-1
             for (var t = ImageDefinition.TypeStart; t < ImageDefinition.TypeStart + ImageDefinition.TypeCount; t++) {
