@@ -48,7 +48,7 @@ public static class Extensions
             options.AddDefaultPolicy(policy =>
             {
                 policy.SetIsOriginAllowed(origin =>
-                        origin.StartsWith("http://localhost") || origin.StartsWith("http://tauri.localhost"))
+                        origin.StartsWith("http://localhost") || origin.StartsWith("http://tauri.localhost") || origin.StartsWith("tauri://localhost"))
                     .AllowAnyHeader()
                     .WithMethods("GET", "POST")
                     .AllowCredentials();

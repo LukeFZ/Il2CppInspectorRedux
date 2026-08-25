@@ -4,8 +4,10 @@ namespace Il2CppInspector.Redux.GUI;
 
 public class UiProcessService(IHostApplicationLifetime lifetime) : BackgroundService
 {
-    // TODO: This needs to be adjusted for multiplatform support
-    private const string UiExecutableName = "il2cppinspectorredux.exe";
+    private const string UiResourceName = "TauriUiExecutable";
+
+    private static string UiExecutableName
+        => OperatingSystem.IsWindows() ? "il2cppinspectorredux.exe" : "il2cppinspectorredux";
 
     private Process? _uiProcess;
     private string? _uiExectuablePath;
@@ -22,9 +24,7 @@ public class UiProcessService(IHostApplicationLifetime lifetime) : BackgroundSer
     {
         try
         {
-            using var executable =
-                typeof(UiProcessService).Assembly.GetManifestResourceStream(
-                    $"{typeof(UiProcessService).Namespace!}.{UiExecutableName}");
+            using var executable = typeof(UiProcessService).Assembly.GetManifestResourceStream(UiResourceName);
 
             if (executable == null)
                 throw new FileNotFoundException("Failed to open resource as stream.");
@@ -32,8 +32,12 @@ public class UiProcessService(IHostApplicationLifetime lifetime) : BackgroundSer
             var tempDir = Directory.CreateTempSubdirectory("il2cppinspectorredux-ui");
             var uiExePath = Path.Join(tempDir.FullName, UiExecutableName);
 
-            using var fs = File.Create(uiExePath);
-            executable.CopyTo(fs);
+            using (var fs = File.Create(uiExePath))
+                executable.CopyTo(fs);
+
+            if (!OperatingSystem.IsWindows())
+                File.SetUnixFileMode(uiExePath, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+
             return uiExePath;
         }
         catch (Exception ex)
@@ -62,7 +66,7 @@ public class UiProcessService(IHostApplicationLifetime lifetime) : BackgroundSer
             _uiProcess.Kill();
 
         if (_uiExectuablePath != null)
-            File.Delete(_uiExectuablePath);
+            Directory.Delete(Path.GetDirectoryName(_uiExectuablePath)!, recursive: true);
 
         return base.StopAsync(cancellationToken);
     }

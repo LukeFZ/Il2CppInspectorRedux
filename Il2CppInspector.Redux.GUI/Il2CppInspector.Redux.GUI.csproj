@@ -10,12 +10,15 @@
       <PublishSingleFile>true</PublishSingleFile>
   </PropertyGroup>
 
-    <!-- todo: this needs to be adjusted for multiplatform support -->
+    <PropertyGroup>
+        <TauriExecutableName>il2cppinspectorredux</TauriExecutableName>
+        <TauriExecutableName Condition="$([MSBuild]::IsOSPlatform('Windows'))">il2cppinspectorredux.exe</TauriExecutableName>
+    </PropertyGroup>
     <Target Name="BuildTauriFrontend" BeforeTargets="BeforeBuild" Condition="'$(Configuration)' == 'Release'">
-        <Exec Command="pnpm install" WorkingDirectory="..\Il2CppInspector.Redux.GUI.UI" />
-        <Exec Command="pnpm tauri build --no-bundle" WorkingDirectory="..\Il2CppInspector.Redux.GUI.UI" />
+        <Exec Command="pnpm install" WorkingDirectory="../Il2CppInspector.Redux.GUI.UI" />
+        <Exec Command="pnpm tauri build --no-bundle" WorkingDirectory="../Il2CppInspector.Redux.GUI.UI" />
         <ItemGroup>
-            <EmbeddedResource Include="..\Il2CppInspector.Redux.GUI.UI\src-tauri\target\release\il2cppinspectorredux.exe" />
+            <EmbeddedResource Include="../Il2CppInspector.Redux.GUI.UI/src-tauri/target/release/$(TauriExecutableName)" LogicalName="TauriUiExecutable" />
         </ItemGroup>
     </Target>
     <ItemGroup>

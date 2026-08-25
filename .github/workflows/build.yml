@@ -3,11 +3,15 @@ name: Il2CppInspectorRedux Build
 on: [push, workflow_dispatch, workflow_call]
 
 jobs:
-  build-redux-gui: # this already includes stuff only relevant for linux/macos for when the gui is released on those platforms
-    runs-on: windows-latest
+  build-redux-gui: # this already includes stuff only relevant for macos for when the gui is released on that platform
+    runs-on: ${{ matrix.platform }}
     strategy:
       matrix:
-        platform: ['windows-latest']
+        include:
+          - platform: 'windows-latest'
+            rid: 'win-x64'
+          - platform: 'ubuntu-22.04'
+            rid: 'linux-x64'
 
     steps:
       - uses: actions/checkout@v5
@@ -67,18 +71,18 @@ jobs:
               ${{ runner.os }}-nuget-redux-gui-
 
       - name: Restore NuGet packages
-        run: dotnet restore -r win-x64 ./Il2CppInspector.Redux.GUI
-      
+        run: dotnet restore -r ${{ matrix.rid }} ./Il2CppInspector.Redux.GUI
+
         # note: we embed the exe directly into the c# component, and it it is built alongside it
         # in another msbuild target.
       - name: Build GUI
-        run: dotnet publish -c Release --no-self-contained --no-restore -o ./win-x64 -r win-x64 ./Il2CppInspector.Redux.GUI/Il2CppInspector.Redux.GUI.csproj
+        run: dotnet publish -c Release --no-self-contained --no-restore -o ./${{ matrix.rid }} -r ${{ matrix.rid }} ./Il2CppInspector.Redux.GUI/Il2CppInspector.Redux.GUI.csproj
 
       - name: Upload GUI Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Il2CppInspectorRedux.GUI
-          path: ./win-x64
+          name: Il2CppInspectorRedux.GUI-${{ matrix.rid }}
+          path: ./${{ matrix.rid }}
 
   build-redux-cli:
     runs-on: ubuntu-latest
