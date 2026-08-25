@@ -6,6 +6,7 @@
 */
 
 using Il2CppInspector.Next;
+using Spectre.Console;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -114,7 +115,17 @@ namespace Il2CppInspector.Reflection
             }
 
             // Create types and methods from MethodSpec (which incorporates TypeSpec in IL2CPP)
+            // A protected/corrupted binary may have out-of-range indices into GenericInstances
+            // or MethodsByDefinitionIndex for some MethodSpec entries - skip those rather than crash
+            var skippedMethodSpecs = 0;
             foreach (var spec in Package.GetAllMethodSpecs()) {
+                if (spec.MethodDefinitionIndex < 0 || spec.MethodDefinitionIndex >= MethodsByDefinitionIndex.Length
+                    || (spec.ClassIndexIndex != -1 && (spec.ClassIndexIndex < 0 || spec.ClassIndexIndex >= Package.GenericInstances.Length))
+                    || (spec.MethodIndexIndex != -1 && (spec.MethodIndexIndex < 0 || spec.MethodIndexIndex >= Package.GenericInstances.Length))) {
+                    skippedMethodSpecs++;
+                    continue;
+                }
+
                 var methodDefinition = MethodsByDefinitionIndex[spec.MethodDefinitionIndex];
                 var declaringType = methodDefinition.DeclaringType;
 
@@ -140,6 +151,8 @@ namespace Il2CppInspector.Reflection
                 method.VirtualAddress = Package.GetGenericMethodPointer(spec);
                 GenericMethods[spec] = method;
             }
+            if (skippedMethodSpecs > 0)
+                AnsiConsole.WriteLine($"Skipped {skippedMethodSpecs} MethodSpec entries with out-of-range indices (binary may be protected/corrupted)");
 
             // Generate a list of all namespaces used
             Namespaces = Assemblies.SelectMany(x => x.DefinedTypes).GroupBy(t => t.Namespace).Select(n => n.Key).Distinct().ToList();
@@ -171,7 +184,8 @@ namespace Il2CppInspector.Reflection
                     method.DeclaringType.Assembly.ImageDefinition, method.Definition, method.Index,
                     method.DeclaringType.Definition, method.DeclaringType.Index);
 
-                if (index != -1)
+                // A protected/corrupted binary may store out-of-range invoker indices
+                if (index >= 0 && index < MethodInvokers.Length)
                 {
                     MethodInvokers[index] ??= new MethodInvoker(method, index);
                     method.Invoker = MethodInvokers[index];
@@ -182,7 +196,8 @@ namespace Il2CppInspector.Reflection
             foreach (var spec in GenericMethods.Keys)
             {
                 var index = package.GetGenericInvokerIndex(spec);
-                if (index != -1)
+                // A protected/corrupted binary may store out-of-range invoker indices
+                if (index >= 0 && index < MethodInvokers.Length)
                 {
                     MethodInvokers[index] ??= new MethodInvoker(GenericMethods[spec], index);
                     GenericMethods[spec].Invoker = MethodInvokers[index];
