@@ -478,9 +478,18 @@ namespace Il2CppInspector
             // Concrete generic method pointers
             AllGenericMethodPointers = Image.ReadMappedUWordArray(CodeRegistration.GenericMethodPointers, (int) CodeRegistration.GenericMethodPointersCount);
             var genericMethodTable = Image.ReadMappedVersionedObjectArray<Il2CppGenericMethodFunctionsDefinitions>(MetadataRegistration.GenericMethodTable, (int) MetadataRegistration.GenericMethodTableCount);
+            var skippedGenericMethodTableEntries = 0;
             foreach (var tableEntry in genericMethodTable) {
-                GenericMethodPointers.Add(MethodSpecs[tableEntry.GenericMethodIndex], AllGenericMethodPointers[tableEntry.Indices.MethodIndex]);
-                GenericMethodInvokerIndices.Add(MethodSpecs[tableEntry.GenericMethodIndex], tableEntry.Indices.InvokerIndex);
+                if (tableEntry.GenericMethodIndex < 0 || tableEntry.GenericMethodIndex >= MethodSpecs.Length
+                    || tableEntry.Indices.MethodIndex < 0 || tableEntry.Indices.MethodIndex >= AllGenericMethodPointers.Length) {
+                    skippedGenericMethodTableEntries++;
+                    continue;
+                }
+                GenericMethodPointers.TryAdd(MethodSpecs[tableEntry.GenericMethodIndex], AllGenericMethodPointers[tableEntry.Indices.MethodIndex]);
+                GenericMethodInvokerIndices.TryAdd(MethodSpecs[tableEntry.GenericMethodIndex], tableEntry.Indices.InvokerIndex);
+            }
+            if (skippedGenericMethodTableEntries > 0) {
+                AnsiConsole.WriteLine($"GenericMethodTable contains {skippedGenericMethodTableEntries}/{genericMethodTable.Length} entries with out-of-range indices - skipping (binary may be protected/corrupted)");
             }
 
             TypeDefinitionSizes = Image.ReadMappedVersionedObjectPointerArray<Il2CppTypeDefinitionSizes>(
