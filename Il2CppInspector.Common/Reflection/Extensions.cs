@@ -138,22 +138,32 @@ namespace Il2CppInspector.Reflection
         };
 
         // Output a string in Python-friendly syntax
-        public static string ToEscapedString(this string str) {
+        public static string ToEscapedString(this string str) => str.ToEscapedString(escapeNonAscii: true);
+
+        private static string ToEscapedString(this string str, bool escapeNonAscii) {
             // Replace standard escape characters
             var s = new StringBuilder();
 
-            foreach (var chr in str)
+            for (var i = 0; i < str.Length; i++)
             {
+                var chr = str[i];
                 if (escapeChars.TryGetValue(chr, out var escaped))
                     s.Append(escaped);
-                else if (chr < 32 || chr > 126)
+                else if ((escapeNonAscii && chr > 126) || CharUnicodeInfo.GetUnicodeCategory(str, i) is
+                    UnicodeCategory.Control or UnicodeCategory.Format or UnicodeCategory.LineSeparator or
+                    UnicodeCategory.ParagraphSeparator or UnicodeCategory.Surrogate)
                 {
                     s.Append("\\u");
                     s.Append($"{(int) chr:X4}");
                 }
+                else if (char.IsSurrogatePair(str, i))
+                {
+                    // Keep printable supplementary characters together; lone surrogates are escaped above.
+                    s.Append(str, i, 2);
+                    i++;
+                }
                 else
                     s.Append(chr);
-                    
             }
 
             return s.ToString();
@@ -199,14 +209,9 @@ namespace Il2CppInspector.Reflection
                         _ => d.ToString(CultureInfo.InvariantCulture)
                     };
                 case string str:
-                    return $"\"{str.ToEscapedString()}\"";
+                    return $"\"{str.ToEscapedString(escapeNonAscii: false)}\"";
                 case char c:
-                {
-                    var cValue = (int) c;
-                    if (cValue < 32 || cValue > 126)
-                        return $"'\\x{cValue:x4}'";
-                    return $"'{value}'";
-                }
+                    return $"'{c.ToString().ToEscapedString(escapeNonAscii: false)}'";
                 case TypeInfo typeInfo:
                     return $"typeof({typeInfo.GetScopedCSharpName(usingScope)})";
                 case CustomAttributeArgument[] array:
