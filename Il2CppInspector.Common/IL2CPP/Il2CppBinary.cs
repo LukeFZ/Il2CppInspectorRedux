@@ -470,14 +470,20 @@ namespace Il2CppInspector
             }
 
             // Generic type and method specs (open and closed constructed types)
-            MethodSpecs = Image.ReadMappedVersionedObjectArray<Il2CppMethodSpec>(MetadataRegistration.MethodSpecs, (int) MetadataRegistration.MethodSpecsCount);
+            // v108+: these live in the metadata (Metadata.MethodSpecs), the registration fields no longer exist
+            MethodSpecs = Image.Version < MetadataVersions.V1080
+                ? Image.ReadMappedVersionedObjectArray<Il2CppMethodSpec>(MetadataRegistration.MethodSpecs, (int) MetadataRegistration.MethodSpecsCount)
+                : [];
 
             // Concrete generic class and method signatures
             GenericInstances = Image.ReadMappedVersionedObjectPointerArray<Il2CppGenericInst>(MetadataRegistration.GenericInsts, (int) MetadataRegistration.GenericInstsCount);
 
             // Concrete generic method pointers
             AllGenericMethodPointers = Image.ReadMappedUWordArray(CodeRegistration.GenericMethodPointers, (int) CodeRegistration.GenericMethodPointersCount);
-            var genericMethodTable = Image.ReadMappedVersionedObjectArray<Il2CppGenericMethodFunctionsDefinitions>(MetadataRegistration.GenericMethodTable, (int) MetadataRegistration.GenericMethodTableCount);
+            // v108+: see Metadata.GenericMethodTable
+            var genericMethodTable = Image.Version < MetadataVersions.V1080
+                ? Image.ReadMappedVersionedObjectArray<Il2CppGenericMethodFunctionsDefinitions>(MetadataRegistration.GenericMethodTable, (int) MetadataRegistration.GenericMethodTableCount)
+                : [];
             foreach (var tableEntry in genericMethodTable) {
                 GenericMethodPointers.Add(MethodSpecs[tableEntry.GenericMethodIndex], AllGenericMethodPointers[tableEntry.Indices.MethodIndex]);
                 GenericMethodInvokerIndices.Add(MethodSpecs[tableEntry.GenericMethodIndex], tableEntry.Indices.InvokerIndex);
