@@ -13,6 +13,9 @@ import ida_xref
 import ida_pro
 import itertools
 
+IDACLANG_AVAILABLE = False
+FOLDERS_AVAILABLE = False
+
 if ida_pro.IDA_SDK_VERSION > 770:
     import ida_srclang
     import ida_dirtree
@@ -20,9 +23,6 @@ if ida_pro.IDA_SDK_VERSION > 770:
     IDACLANG_AVAILABLE = True
     FOLDERS_AVAILABLE = True
     print("IDACLANG available")
-else:
-    IDACLANG_AVAILABLE = False
-    FOLDERS_AVAILABLE = False
 
 try:
     from typing import TYPE_CHECKING, Union
@@ -58,6 +58,8 @@ class IDADisassemblerInterface(BaseDisassemblerInterface):
     _is_32_bit: bool
     _fake_segments_base: int
 
+    _original_selected_parser: str | None
+
     def __init__(self, status: BaseStatusHandler):
         self._status = status
 
@@ -68,6 +70,8 @@ class IDADisassemblerInterface(BaseDisassemblerInterface):
         self._skip_function_creation = False
         self._is_32_bit = False
         self._fake_segments_base = 0
+
+        self._original_selected_parser = ""
 
     def _get_type(self, type: str):
         if type not in self._type_cache:
@@ -151,8 +155,16 @@ class IDADisassemblerInterface(BaseDisassemblerInterface):
 
         self._is_32_bit = ida_ida.inf_is_32bit_exactly()
 
+        # this has to be done to speed up type applying significantly
+        if ida_pro.IDA_SDK_VERSION > 950:
+            self._original_selected_parser = ida_srclang.get_selected_parser_name()
+            ida_srclang.select_parser_by_name("legacy")
+
     def on_finish(self):
         ida_ida.inf_set_genflags(self._cached_genflags)
+
+        if ida_pro.IDA_SDK_VERSION > 950:
+            ida_srclang.select_parser_by_name(self._original_selected_parser or "")
 
     def define_function(self, address: int, end: Union[int, None] = None):
         if self._skip_function_creation:
@@ -235,9 +247,11 @@ class IDADisassemblerInterface(BaseDisassemblerInterface):
 
     # optional
     def add_function_to_group(self, address: int, group: str):
-        if (
-            not FOLDERS_AVAILABLE or ida_pro.IDA_SDK_VERSION < 930
-        ):  # enable at your own risk on pre 9.3 - this is slow
+        if not FOLDERS_AVAILABLE:
+            return
+
+        # enable at your own risk on pre 9.3 - this is slow
+        if ida_pro.IDA_SDK_VERSION < 930:
             return
 
         if group not in self._folders:
