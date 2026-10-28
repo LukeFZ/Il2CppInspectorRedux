@@ -15,7 +15,7 @@ internal sealed class InteractiveCommand(PortProvider portProvider) : BaseComman
             Environment.Exit(0);
         };
 
-        AnsiConsole.MarkupLine("[white bold]Welcome to the interactive Il2CppInspectorRedux CLI![/]");
+        AnsiConsole.MarkupLine("[white bold]meow :3 Welcome to the interactive Il2CppInspectorRedux CLI~[/]");
         AnsiConsole.MarkupLine("(For regular CLI usage, use the process command)");
         AnsiConsole.MarkupLine("");
 
