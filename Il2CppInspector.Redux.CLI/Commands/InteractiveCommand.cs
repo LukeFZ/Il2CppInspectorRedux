@@ -10,17 +10,22 @@ internal sealed class InteractiveCommand(PortProvider portProvider) : BaseComman
 
     protected override async Task<int> ExecuteAsync(CliClient client, Settings settings)
     {
-        AnsiConsole.MarkupLine("[white bold]Welcome to the interactive Il2CppInspectorRedux CLI![/]");
-        AnsiConsole.MarkupLineInterpolated($"Using inspector [gray]{await client.GetInspectorVersion()}[/]");
-        AnsiConsole.MarkupLine("(For regular CLI usage, use the process command)");
+        Console.CancelKeyPress += (e, evt) =>
+        {
+            Environment.Exit(0);
+        };
 
-        while (client.ImportCompleted)
+        AnsiConsole.MarkupLine("[white bold]Welcome to the interactive Il2CppInspectorRedux CLI![/]");
+        AnsiConsole.MarkupLine("(For regular CLI usage, use the process command)");
+        AnsiConsole.MarkupLine("");
+
+        while (!client.ImportCompleted)
         {
             var inputPath = AnsiConsole
                 .Ask<string>("Please enter the file path to a [green bold]valid input file[/] and press enter.")
                 .Trim('"', '\'');
 
-            if (!File.Exists(inputPath) || !Directory.Exists(inputPath))
+            if (!File.Exists(inputPath) && !Directory.Exists(inputPath))
             {
                 AnsiConsole.MarkupLine("[red bold]Error: Input file does not exist.[/]");
                 continue;
@@ -53,43 +58,40 @@ internal sealed class InteractiveCommand(PortProvider portProvider) : BaseComman
                 .InstructionsText("[grey](Press [blue]<space>[/] to toggle a fruit, [green]<enter>[/] to accept)[/]")
                 .AddChoices("Dummy DLLs", "Disassembler Script"));
 
-        await AnsiConsole.Status()
-            .StartAsync("Outputting IL2CPP data", async ctx =>
+        if (outputFormats.Contains("Dummy DLLs"))
+        {
+            AnsiConsole.MarkupLine("[gray]Creating dummy DLLs...[/]");
+
+            var suppressMetadata =
+                await AnsiConsole.AskAsync("Should metadata attributes be suppressed?", false);
+
+            var directory = Path.Join(outputPath, "dll");
+            await client.QueueExport(DummyDllOutput.Id, directory, new Dictionary<string, string>
             {
-                if (outputFormats.Contains("Dummy DLLs"))
-                {
-                    ctx.Status("[gray]Creating dummy DLLs...[/]");
-
-                    var suppressMetadata =
-                        await AnsiConsole.AskAsync("Should metadata attributes be suppressed? (default: no)", false);
-
-                    var directory = Path.Join(outputPath, "dll");
-                    await client.QueueExport(DummyDllOutput.Id, directory, new Dictionary<string, string>
-                    {
-                        ["suppressmetadata"] = suppressMetadata.ToString()
-                    });
-
-                    AnsiConsole.MarkupLine("[green bold]Successfully[/] [white bold]created dummy DLLs![/]");
-                }
-
-                if (outputFormats.Contains("Disassembler Script"))
-                {
-                    ctx.Status("[gray]Creating diassembler script...[/]");
-
-                    var disassembler =
-                        await AnsiConsole.AskAsync("Which disassembler are you using? (default: IDA)",
-                            DisassemblerType.IDA);
-
-                    await client.QueueExport(DisassemblerMetadataOutput.Id, outputPath,
-                        new Dictionary<string, string>
-                        {
-                            ["disassembler"] = disassembler.ToString(),
-                            ["unityversion"] = unityVersions.First()
-                        });
-
-                    AnsiConsole.MarkupLine("[green bold]Successfully[/] [white bold]created disassembler script![/]");
-                }
+                ["suppressmetadata"] = suppressMetadata.ToString()
             });
+
+            AnsiConsole.MarkupLine("[green bold]Successfully[/] [white bold]created dummy DLLs![/]");
+        }
+
+        if (outputFormats.Contains("Disassembler Script"))
+        {
+            AnsiConsole.MarkupLine("[gray]Creating diassembler script...[/]");
+
+            var disassembler =
+                await AnsiConsole.PromptAsync(
+                    new SelectionPrompt<DisassemblerType>().Title("Which disassembler are you using?")
+                        .AddChoices(DisassemblerType.IDA, DisassemblerType.Ghidra, DisassemblerType.BinaryNinja));
+
+            await client.QueueExport(DisassemblerMetadataOutput.Id, outputPath,
+                new Dictionary<string, string>
+                {
+                    ["disassembler"] = disassembler.ToString(),
+                    ["unityversion"] = unityVersions.First()
+                });
+
+            AnsiConsole.MarkupLine("[green bold]Successfully[/] [white bold]created disassembler script![/]");
+        }
 
         return 0;
     }
