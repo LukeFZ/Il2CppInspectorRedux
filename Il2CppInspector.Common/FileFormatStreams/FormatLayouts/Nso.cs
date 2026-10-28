@@ -81,7 +81,9 @@ public enum SegmentFlags : uint
     DataCompress = 1 << 2,
     TextHash = 1 << 3,
     RoHash = 1 << 4,
-    DataHash = 1 << 5
+    DataHash = 1 << 5,
+    ExecuteOnlyMemory = 1 << 6,
+    ZbicCompression = 1 << 7,
 }
 
 [VersionedStruct]

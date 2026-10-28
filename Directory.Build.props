@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-	  <TargetFramework>net10.0</TargetFramework>
+	  <TargetFrameworks>net10.0</TargetFrameworks>
 	  <LangVersion>preview</LangVersion>
 	  <EnableSourceControlManagerQueries>true</EnableSourceControlManagerQueries>
 	  <Version>2026.2</Version>

@@ -11,6 +11,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using VersionedSerialization;
+using ZstdSharp;
 
 namespace Il2CppInspector;
 
@@ -177,9 +178,11 @@ public class NsoReader : FileFormatStream<NsoReader>
 
         _mappedExecutable.Initialize(totalLength, true, false, 0);
 
-        LoadSegment(in header.TextSegment, header.TextFileSize, header.Flags.HasFlag(SegmentFlags.TextCompress));
-        LoadSegment(in header.RoSegment, header.RoFileSize, header.Flags.HasFlag(SegmentFlags.RoCompress));
-        LoadSegment(in header.DataSegment, header.DataFileSize, header.Flags.HasFlag(SegmentFlags.DataCompress));
+        var usesZbic = header.Flags.HasFlag(SegmentFlags.ZbicCompression);
+
+        LoadSegment(in header.TextSegment, header.TextFileSize, header.Flags.HasFlag(SegmentFlags.TextCompress), usesZbic);
+        LoadSegment(in header.RoSegment, header.RoFileSize, header.Flags.HasFlag(SegmentFlags.RoCompress), usesZbic);
+        LoadSegment(in header.DataSegment, header.DataFileSize, header.Flags.HasFlag(SegmentFlags.DataCompress), usesZbic);
 
         LoadMappedExecutable(header.TextSegment.MemoryOffset);
     }
@@ -221,7 +224,7 @@ public class NsoReader : FileFormatStream<NsoReader>
         ApplyRelocations();
     }
 
-    private void LoadSegment(ref readonly SegmentHeader header, uint fileSize, bool isCompressed)
+    private void LoadSegment(ref readonly SegmentHeader header, uint fileSize, bool isCompressed, bool usesZbic)
     {
         var reader = new Reader<BinaryObjectStreamReader>(this)
         {
@@ -239,11 +242,19 @@ public class NsoReader : FileFormatStream<NsoReader>
             var rented = ArrayPool<byte>.Shared.Rent(checked((int)header.Size));
             var decompressed = rented.AsSpan(0, checked((int)header.Size));
 
-            var result = LZ4Codec.Decode(data, decompressed);
-            Debug.Assert(result == header.Size);
-            _ = result;
+            int decompressedSize;
+            if (usesZbic)
+            {
+                decompressedSize = new Decompressor().Unwrap(data, decompressed);
+            }
+            else
+            {
+                decompressedSize = LZ4Codec.Decode(data, decompressed);
+            }
 
-            _mappedExecutable.WriteBytes(header.MemoryOffset, decompressed);
+            Debug.Assert(decompressedSize == header.Size);
+
+            _mappedExecutable.WriteBytes(header.MemoryOffset, decompressed[..decompressedSize]);
 
             ArrayPool<byte>.Shared.Return(rented);
         }

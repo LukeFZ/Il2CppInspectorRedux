@@ -44,6 +44,7 @@
     <ProjectReference Include="..\Bin2Object\Bin2Object\Bin2Object.csproj" PrivateAssets="all" />
     <ProjectReference Include="..\VersionedSerialization.Generator\VersionedSerialization.Generator.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
     <ProjectReference Include="..\VersionedSerialization\VersionedSerialization.csproj" />
+    <ProjectReference Include="..\ZbicSharp\src\ZstdSharp\ZstdSharp.csproj" />
   </ItemGroup>
 
   <ItemGroup>

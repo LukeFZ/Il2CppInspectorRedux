@@ -31,4 +31,5 @@
   </Project>
   <Project Path="VersionedSerialization.Generator/VersionedSerialization.Generator.csproj" />
   <Project Path="VersionedSerialization/VersionedSerialization.csproj" />
+  <Project Path="ZbicSharp/src/ZstdSharp/ZstdSharp.csproj" />
 </Solution>

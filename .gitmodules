@@ -1,3 +1,7 @@
 [submodule "Bin2Object"]
 	path = Bin2Object
 	url = https://github.com/LukeFZ/Bin2Object
+[submodule "ZbicSharp"]
+	path = ZbicSharp
+	url = https://github.com/LukeFZ/ZbicSharp
+	branch = zbic
