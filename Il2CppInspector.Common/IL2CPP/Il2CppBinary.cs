@@ -298,11 +298,6 @@ namespace Il2CppInspector
              */
             if ((Metadata != null && Metadata.Types.Length != MetadataRegistration.TypeDefinitionsSizesCount)
                 || CodeRegistration.ReversePInvokeWrapperCount > 0x10000
-                // L-NOTE: These below boundaries have been updated already as some games
-                // have reached these limits during normal use. Maybe we should just remove them
-                // at this point?
-                || CodeRegistration.UnresolvedVirtualCallCount > 0x8000 // >= 22
-                || CodeRegistration.InteropDataCount > 0x2000           // >= 23
                 || (Image.Version <= MetadataVersions.V241 && CodeRegistration.InvokerPointersCount > CodeRegistration.MethodPointersCount))
                 throw new NotSupportedException("The detected Il2CppCodeRegistration / Il2CppMetadataRegistration structs do not pass validation. This may mean that their fields have been re-ordered as a form of obfuscation and Il2CppInspector has not been able to restore the original order automatically. Consider re-ordering the fields in Il2CppBinaryClasses.cs and try again.");
             
