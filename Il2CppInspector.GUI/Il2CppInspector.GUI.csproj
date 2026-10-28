@@ -12,6 +12,7 @@
     <Product>Il2CppInspectorRedux Windows Edition</Product>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Il2CppInspector.ico</ApplicationIcon>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting> <!-- Needed for the solution to load on Linux -->
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
