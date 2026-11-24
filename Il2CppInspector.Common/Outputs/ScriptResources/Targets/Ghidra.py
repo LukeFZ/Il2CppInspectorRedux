@@ -229,6 +229,8 @@ class GhidraDisassemblerInterface(BaseDisassemblerInterface):
             if part == "":
                 continue
 
+            part = SymbolUtilities.replaceInvalidChars(part, True)
+
             ns = self._symbol_table.getNamespace(part, current_ns)
 
             if ns is None:
